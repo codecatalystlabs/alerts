@@ -12,6 +12,19 @@
     overflow-x: auto;
     overflow-y: auto;
 }
+.entry-screen-index{
+    width: 65% !important;
+    margin-left: 50px;
+    border: none 1px;  
+    padding: 2px 10px 2px 10px;
+    border-radius: 10px;
+    box-shadow: 5px 5px 10px rgba(0,0,0,0.5);
+    background-color: lightcyan;
+    overflow-y: auto;
+    height: 780px;
+    max-height: 520px;
+    overflow-y: auto;
+}
  .left-pane {
     width: 28%;
     margin-right: 15px;

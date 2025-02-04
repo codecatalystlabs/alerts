@@ -55,9 +55,17 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Register</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Add this to include Select2 CSS -->
+<link href="https://cdn.jsdelivr.net/npm/select2@4.0.13/dist/css/select2.min.css" rel="stylesheet" />
+
+<!-- Add this to include Select2 JS -->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/select2@4.0.13/dist/js/select2.min.js"></script>
+
     <link href="../style/style.css" rel="stylesheet">
 </head>
 <body>
+    <?php include('../includes/nav.php'); ?>
     <div class="container d-flex justify-content-center align-items-center vh-80">
         <div class="card p-3 shadow-lg" style="width: 700px; margin-top: 70px;">
             <h3 class="text-center">Add User</h3>
@@ -85,14 +93,16 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 <div class="col-md-4 mb-3">
                 <label for="source_of_alert" class="form-label">Assign to</label>
                 
-                <select class="form-select" id="affiliation" name="affiliation" required>
-                    <option value="">-- Select Affiliation --</option>
-                    <?php while ($row = $result2->fetch_assoc()): ?>
-                        <option value="<?= htmlspecialchars($row['name']); ?>">
-                            <?= htmlspecialchars($row['name']); ?>
-                        </option>
-                    <?php endwhile; ?>
-                </select>
+                <label for="affiliation" class="form-label">District</label>
+                    <select class="form-select" id="affiliation" name="affiliation">
+                        <option value="">-- Select District --</option>
+                        <?php while ($row = $result2->fetch_assoc()): ?>
+                            <option value="<?= htmlspecialchars($row['id']); ?>">
+                                <?= htmlspecialchars($row['name']); ?>
+                            </option>
+                        <?php endwhile; ?>
+                    </select>
+
             </div>
                 <div class="col-md-4 mb-3">
                     <label class="form-label">Username</label>
@@ -120,23 +130,25 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         </div>
     </div>
     <script>
-    $(document).ready(function() {
-        $('#affiliation').select2({
-            placeholder: "Search for an affiliation...",
-            ajax: {
-                url: 'fetch_affiliations.php',
-                dataType: 'json',
-                delay: 250,
-                processResults: function(data) {
-                    return {
-                        results: data
-                    };
-                },
-                cache: true
+   $(document).ready(function() {
+    // Initialize select2 for search functionality
+    $('#affiliation').select2({
+        placeholder: "Search for a district...",
+        allowClear: true,  // Allow clearing the selection
+        ajax: {
+            url: 'fetch_affiliations.php',  // Endpoint to fetch data dynamically
+            dataType: 'json',
+            delay: 250,  // Delay to avoid too many requests on each keystroke
+            processResults: function(data) {
+                return {
+                    results: data  // Process the result and return it
+                };
             },
-            minimumInputLength: 1 // User must type at least 1 character
-        });
+            cache: true
+        },
+        minimumInputLength: 3  // Minimum input length before search is triggered
     });
+});
 </script>
 </body>
 </html>

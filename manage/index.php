@@ -1,76 +1,85 @@
 <?php
 session_start();
+require('../conn.php');
+
+// Check if user is logged in and has necessary permissions
 if (!isset($_SESSION['user_id']) || !isset($_SESSION['level'])) {
     header("Location: ../index.php");
     exit();
 }
+
+// Query to fetch admin units (if needed for your form)
 $sql2 = "SELECT id, name FROM admin_units"; // Adjust column names as per your DB
 $result2 = $conn->query($sql2);
-require('../conn.php');
+
+// Handle form submission
 if (isset($_POST['report'])) {
-// Capture form data
-$status = mysqli_real_escape_string($conn, $_POST['status']);
-$date = mysqli_real_escape_string($conn, $_POST['date']);
-$time = mysqli_real_escape_string($conn, $_POST['time']);
-$call_taker = mysqli_real_escape_string($conn, $_POST['call_taker']);
-$cif_no = mysqli_real_escape_string($conn, strtoupper($_POST['cif_no']));
-$person_reporting = mysqli_real_escape_string($conn, $_POST['person_reporting']);
-$village = mysqli_real_escape_string($conn, $_POST['village']);
-$sub_county = mysqli_real_escape_string($conn, $_POST['sub_county']);
-$contact_number = mysqli_real_escape_string($conn, $_POST['contact_number']);
-$source_of_alert = mysqli_real_escape_string($conn, $_POST['source_of_alert']);
-$alert_case_name = mysqli_real_escape_string($conn, $_POST['alert_case_name']);
-$alert_case_age = mysqli_real_escape_string($conn, $_POST['alert_case_age']);
-$alert_case_sex = mysqli_real_escape_string($conn, $_POST['alert_case_sex']);
-$alert_case_pregnant_duration = mysqli_real_escape_string($conn, $_POST['alert_case_pregnant_duration']) ?? null;
-$alert_case_village = mysqli_real_escape_string($conn, $_POST['alert_case_village']);
-$alert_case_parish = mysqli_real_escape_string($conn, $_POST['alert_case_parish']);
-$alert_case_sub_county = mysqli_real_escape_string($conn, $_POST['alert_case_sub_county']);
-$alert_case_district = mysqli_real_escape_string($conn, $_POST['alert_case_district']);
-$alert_case_nationality = mysqli_real_escape_string($conn, $_POST['alert_case_nationality']);
-$point_of_contact_name = mysqli_real_escape_string($conn, $_POST['point_of_contact_name']);
-$point_of_contact_relationship = mysqli_real_escape_string($conn, $_POST['point_of_contact_relationship']);
-$point_of_contact_phone = mysqli_real_escape_string($conn, $_POST['point_of_contact_phone']);
-$history = isset($_POST['history']) ? implode(", ", array_map(function($value) use ($conn) {
-    return mysqli_real_escape_string($conn, $value);
-}, $_POST['history'])) : null;
-
-$health_facility_visit = mysqli_real_escape_string($conn, $_POST['health_facility_visit']);
-$traditional_healer_visit = mysqli_real_escape_string($conn, $_POST['traditional_healer_visit']);
-$symptoms = isset($_POST['symptoms']) ? implode(", ", array_map(function($symptom) use ($conn) {
-    return mysqli_real_escape_string($conn, $symptom);
-}, $_POST['symptoms'])) : null;
-$actions = mysqli_real_escape_string($conn, $_POST['actions']);
-
-// Insert data into the database
-$sql = "INSERT INTO alerts (status, date, time, call_taker, cif_no, person_reporting,village, sub_county, contact_number, source_of_alert, alert_case_name, alert_case_age, alert_case_sex, alert_case_pregnant_duration, alert_case_village, alert_case_parish, alert_case_sub_county, alert_case_district, alert_case_nationality, point_of_contact_name, point_of_contact_relationship, point_of_contact_phone, history, health_facility_visit, traditional_healer_visit, symptoms, actions) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
-
-$stmt = $conn->prepare($sql);
-
-// Ensure that you are passing 27 variables in the bind_param section:
-$stmt->bind_param(
-    "sssssssssssisisssssssssssss",$status, $date, $time, $call_taker, $cif_no, $person_reporting, $village, $sub_county, $contact_number, $source_of_alert, $alert_case_name, $alert_case_age, $alert_case_sex, $alert_case_pregnant_duration, $alert_case_village, $alert_case_parish, $alert_case_sub_county, $alert_case_district, $alert_case_nationality, $point_of_contact_name, $point_of_contact_relationship, $point_of_contact_phone, $history, $health_facility_visit, $traditional_healer_visit, $symptoms, $actions);
-
-
-if ($stmt->execute()) {
-     echo "Alert submitted successfully!";
-    header("Location: ".$_SERVER['PHP_SELF']); // Redirect to the same page
-    exit();
-} else {
-    echo "Error: " . $stmt->error;
-}
-
-$stmt->close();
-$conn->close();
+    // Capture and sanitize form data
+    $alert_reported_before = mysqli_real_escape_string($conn, $_POST['alert_reported_before']);
+    $date = mysqli_real_escape_string($conn, $_POST['date']);
+    $time = mysqli_real_escape_string($conn, $_POST['time']);
+    $call_taker = mysqli_real_escape_string($conn, $_POST['call_taker']);
+    // $person_reporting = mysqli_real_escape_string($conn, $_POST['person_reporting']);
+    $village = mysqli_real_escape_string($conn, $_POST['village']);
+    $sub_county = mysqli_real_escape_string($conn, $_POST['sub_county']);
+    $contact_number = mysqli_real_escape_string($conn, $_POST['contact_number']);
+    $alert_case_name = mysqli_real_escape_string($conn, $_POST['alert_case_name']);
+    $alert_case_age = mysqli_real_escape_string($conn, $_POST['alert_case_age']);
+    $alert_case_sex = mysqli_real_escape_string($conn, $_POST['alert_case_sex']);
+    $alert_case_parish = mysqli_real_escape_string($conn, $_POST['alert_case_parish']);
+    $point_of_contact_name = mysqli_real_escape_string($conn, $_POST['point_of_contact_name']);
+    $point_of_contact_phone = mysqli_real_escape_string($conn, $_POST['point_of_contact_phone']);
+    
+    // Optional: Handle additional form data like source_of_alert, pregnant_duration, etc. based on your form
+    // Example:
+    // $status = mysqli_real_escape_string($conn, $_POST['status']);
+    // $source_of_alert = mysqli_real_escape_string($conn, $_POST['source_of_alert']);
+    // $alert_case_village = mysqli_real_escape_string($conn, $_POST['alert_case_village']);
+    
+    // SQL query to insert data
+    $sql = "INSERT INTO alerts (date, time, call_taker, village, sub_county, contact_number, alert_case_name, alert_case_age, alert_case_sex, alert_case_parish, point_of_contact_name, point_of_contact_phone,alert_reported_before)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+    
+    $stmt = $conn->prepare($sql);
+    
+    // Bind parameters to avoid SQL injection
+    $stmt->bind_param(
+        "sssssssisssss", 
+        $date, $time, $call_taker, $village, $sub_county, 
+        $contact_number, $alert_case_name, $alert_case_age, $alert_case_sex, 
+        $alert_case_parish, $point_of_contact_name, $point_of_contact_phone, 
+        $alert_reported_before
+    );
+    
+    // Execute and check if insertion is successful
+    if ($stmt->execute()) {
+        echo "Alert submitted successfully!";
+        header("Location: " . $_SERVER['PHP_SELF']); // Redirect to the same page after successful submission
+        exit();
+    } else {
+        echo "Error: " . $stmt->error; // Show error if insertion fails
+    }
+    
+    // Close prepared statement and database connection
+    $stmt->close();
+    $conn->close();
 }
 ?>
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MPOX Alert Verification Form</title>
+    <title>Alert Call Log</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Add this to include Select2 CSS -->
+<link href="https://cdn.jsdelivr.net/npm/select2@4.0.13/dist/css/select2.min.css" rel="stylesheet" />
+
+<!-- Add this to include Select2 JS -->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/select2@4.0.13/dist/js/select2.min.js"></script>
+
     <link href="../style/style.css" rel="stylesheet">
 </head>
 <body>
@@ -78,189 +87,102 @@ $conn->close();
    <div id="side-pane-container">
         <?php include("../includes/side-pane.php"); ?>
     </div>
-    <div class="entry-screen mt-1">
+    <div class="entry-screen-index mt-1">
         <h2 class="text-center mb-4">Alert Call Log</h2>
         <form action="" method="POST">
             <div class="mb-2">
                 
             </div>
             <div class="row">
-            <div class="col-md-4 mb-3">
-            <label for="status" class="form-label">Status</label>
-                <select class="form-select" id="status" name="status" required>
-                    <option value="Alive">Alive</option>
-                    <option value="Dead">Dead</option>
-                </select>
-                </div>
-                <div class="col-md-4 mb-3">
-                    <label for="date" class="form-label">Date</label>
-                    <input type="date" class="form-control" id="date" name="date" required>
-                </div>
-                <div class="col-md-4 mb-3">
-                    <label for="time" class="form-label">Time</label>
-                    <input type="time" class="form-control" id="time" name="time" required>
-                </div>
             </div>
             <div class="row">
-                <div class="col-md-4 mb-3">
-                    <label for="call_taker" class="form-label">Call Taker</label>
-                    <input type="text" class="form-control" id="call_taker" name="call_taker" required>
+                <div class="col-md-3 mb-3">
+                    <label for="date" class="form-label">Date</label>
+                    <input type="date" class="form-control" id="date" name="date">
                 </div>
-                <div class="col-md-4 mb-3">
-                    <label for="cif_no" class="form-label">CIF No</label>
-                    <input type="text" class="form-control" id="cif_no" name="cif_no" required>
+                <div class="col-md-3 mb-3">
+                    <label for="date" class="form-label">Time of Call</label>
+                    <input type="time" class="form-control" id="time" name="time">
                 </div>
-                <div class="col-md-4 mb-3">
-                <label for="person_reporting" class="form-label">Person Reporting Alert</label>
-                <input type="text" class="form-control" id="person_reporting" name="person_reporting" required>
+                <div class="col-md-3 mb-3">
+                    <label for="alert_case_sex" class="form-label">Alert reported before?</label>
+                    <select class="form-select" id="alert_reported_before" name="alert_reported_before" required>
+                        <option value="Yes">Yes</option>
+                        <option value="No">No</option>
+                    </select>
+                </div>
+                <div class="col-md-3 mb-3">
+                    <label for="call_taker" class="form-label">Name of person calling</label>
+                    <input type="text" class="form-control" id="call_taker" name="call_taker">
+                </div>
+                <div class="col-md-3 mb-3">
+                    <label for="contact_number" class="form-label">Number of person calling</label>
+                    <input type="tel" class="form-control" id="contact_number" name="contact_number">
                 </div>
             </div>
             
             <div class="row">
-                <div class="col-md-4 mb-3">
+                <h3>Alert Location</h3>
+
+                <div class="col-md-3 mb-3">
                     <label for="village" class="form-label">Village</label>
-                    <input type="text" class="form-control" id="village" name="village" required>
+                    <input type="text" class="form-control" id="village" name="village">
                 </div>
-                <div class="col-md-4 mb-3">
-                    <label for="sub_county" class="form-label">Sub-county</label>
-                    <input type="text" class="form-control" id="sub_county" name="sub_county" required>
+                <div class="col-md-3 mb-3">
+                    <label for="alert_case_parish" class="form-label">Parish</label>
+                    <input type="text" class="form-control" id="alert_case_parish" name="alert_case_parish">
                 </div>
-                <div class="col-md-4 mb-3">
-                    <label for="contact_number" class="form-label">Contact Number</label>
-                    <input type="tel" class="form-control" id="contact_number" name="contact_number" required>
+                <div class="col-md-3 mb-3">
+                    <label for="sub_county" class="form-label">Sub-county/Division</label>
+                    <input type="text" class="form-control" id="sub_county" name="sub_county">
+                </div>
+                
+                <div class="col-md-3 mb-3">
+                    <label for="affiliation" class="form-label">District</label>
+                        <select class="form-select" id="affiliation" name="affiliation">
+                            <option value="">-- Select District --</option>
+                            <?php while ($row = $result2->fetch_assoc()): ?>
+                                <option value="<?= htmlspecialchars($row['id']); ?>">
+                                    <?= htmlspecialchars($row['name']); ?>
+                                </option>
+                            <?php endwhile; ?>
+                        </select>                               
                 </div>
             </div>
             <div class="row">
-                <div class="col-md-4 mb-3">
-                <label for="source_of_alert" class="form-label">Source of Alert</label>
-                <select class="form-select" id="source_of_alert" name="source_of_alert" required>
-                    <option value="Community">Community</option>
-                    <option value="Health Facility">Health Facility</option>
-                    <option value="Contact Tracing">Contact Tracing</option>
-                    <option value="VHT">VHT</option>
-                    <option value="Active Case Search">Active Case Search</option>
-                    <option value="SMS Alert">SMS Alert</option>
-                </select>
+                <h3>Case Alert Description</h3>
+            <div class="col-md-3 mb-3">
+                <label for="alert_case_name" class="form-label">Case Name</label>
+                <input type="text" class="form-control" id="alert_case_name" name="alert_case_name">
             </div>
-            <div class="col-md-4 mb-3">
-                <label for="alert_case_name" class="form-label">Name</label>
-                <input type="text" class="form-control" id="alert_case_name" name="alert_case_name" required>
-            </div>
-            </div>
-        </div>
-            <div class="row">
-                <div class="col-md-3 mb-3">
-                    <label for="alert_case_age" class="form-label">Age</label>
-                    <input type="number" class="form-control" id="alert_case_age" name="alert_case_age" required>
+            <div class="col-md-2 mb-3">
+                    <label for="alert_case_age" class="form-label">Case Age</label>
+                    <input type="number" class="form-control" id="alert_case_age" name="alert_case_age">
                 </div>
                 <div class="col-md-3 mb-3">
-                    <label for="alert_case_sex" class="form-label">Sex</label>
-                    <select class="form-select" id="alert_case_sex" name="alert_case_sex" required>
+                    <label for="alert_case_sex" class="form-label">Case Sex</label>
+                    <select class="form-select" id="alert_case_sex" name="alert_case_sex">
                         <option value="Male">Male</option>
                         <option value="Female">Female</option>
                     </select>
                 </div>
-                <div class="col-md-3 mb-3">
-                    <label for="alert_case_pregnant_duration" class="form-label">Pregnant Duration</label>
-                    <input type="number" class="form-control" id="alert_case_pregnant_duration" name="alert_case_pregnant_duration" placeholder="(In Months)">
-                </div>
-                <div class="col-md-3 mb-3">
-                    <label for="alert_case_village" class="form-label">Village/Institution Name</label>
-                    <input type="text" class="form-control" id="alert_case_village" name="alert_case_village" required>
-                </div>
+                 <div class="col-md-3 mb-3">
+                <label for="point_of_contact_name" class="form-label">Name of Next of Kin</label>
+                <input type="text" class="form-control" id="point_of_contact_name" name="point_of_contact_name">
             </div>
+        </div>
             <div class="row">
-                <div class="col-md-4 mb-3">
-                    <label for="alert_case_parish" class="form-label">Parish</label>
-                    <input type="text" class="form-control" id="alert_case_parish" name="alert_case_parish" required>
-                </div>
-                <select class="form-select" id="affiliation" name="affiliation" required>
-                    <option value="">-- Select Affiliation --</option>
-                    <?php while ($row = $result2->fetch_assoc()): ?>
-                        <option value="<?= htmlspecialchars($row['id']); ?>">
-                            <?= htmlspecialchars($row['name']); ?>
-                        </option>
-                    <?php endwhile; ?>
-                </select>
-                <div class="col-md-4 mb-3">
-                    <label for="alert_case_district" class="form-label">District</label>
-                    <input type="text" class="form-control" id="alert_case_district" name="alert_case_district" required>
-                </div>
-            </div>
-            <div class="row">
-            <div class="col-md-3 mb-3">
-                    <label for="nationality" class="form-label">Nationality</label>
-                    <select class="form-select" id="nationality" name="alert_case_nationality" required>
-                        <option value="">Select Nationality</option>
-                        <option value="Uganda">Uganda</option>
-                    </select>
-                </div>
-            <div class="col-md-3 mb-3">
-                <label for="point_of_contact_name" class="form-label">Point of Contact Name</label>
-                <input type="text" class="form-control" id="point_of_contact_name" name="point_of_contact_name" required>
-            </div>
-        
-          
+
+            
+                
                 <div class="col-md-3 mb-3">
-                    <label for="point_of_contact_relationship" class="form-label">Relationship</label>
-                    <input type="text" class="form-control" id="point_of_contact_relationship" name="point_of_contact_relationship" required>
+                    <label for="point_of_contact_phone" class="form-label">Next of Kin Phone Number</label>
+                    <input type="tel" class="form-control" id="point_of_contact_phone" name="point_of_contact_phone">
                 </div>
-                <div class="col-md-3 mb-3">
-                    <label for="point_of_contact_phone" class="form-label">Phone</label>
-                    <input type="tel" class="form-control" id="point_of_contact_phone" name="point_of_contact_phone" required>
-                </div>
-            </div>
-            <div class="mb-3">
-                <label for="history" class="form-label">History (Last 21 Days)</label>
-                <div class="form-check">
-                    <input class="form-check-input" type="checkbox" value="Other mass gathering" id="mass_gathering" name="history[]">
-                    <label class="form-check-label" for="mass_gathering">Other mass gathering</label>
-                </div>
-                <div class="form-check">
-                    <input class="form-check-input" type="checkbox" value="Contact of suspect/probable/confirmed case" id="contact_case" name="history[]">
-                    <label class="form-check-label" for="contact_case">Contact of suspect/probable/confirmed case</label>
-                </div>
-                <div class="form-check">
-                    <input class="form-check-input" type="checkbox" value="Contact of sudden/unexplained death" id="unexplained_death" name="history[]">
-                    <label class="form-check-label" for="unexplained_death">Contact of sudden/unexplained death</label>
-                </div>
-            </div>
-            <div class="mb-3">
-                <label for="health_facility_visit" class="form-label">Visited Health Facility</label>
-                <textarea class="form-control" id="health_facility_visit" name="health_facility_visit" rows="2" placeholder="Include date, facility name, and contact/location." required></textarea>
-            </div>
-            <div class="mb-3">
-                <label for="traditional_healer_visit" class="form-label">Visited Traditional Healer</label>
-                <textarea class="form-control" id="traditional_healer_visit" name="traditional_healer_visit" rows="2" placeholder="Include date, healer name, and contact/location." required></textarea>
-            </div>
-            <div class="mb-3">
-                <label for="symptoms" class="form-label">Signs and Symptoms</label>
-                <div class="form-check">
-                    <input class="form-check-input" type="checkbox" value="Fever" id="fever" name="symptoms[]">
-                    <label class="form-check-label" for="fever">Fever (&ge;38&deg;C)</label>
-                </div>
-                <div class="form-check">
-                    <input class="form-check-input" type="checkbox" value="Headache" id="headache" name="symptoms[]">
-                    <label class="form-check-label" for="headache">Headache</label>
-                </div>
-                <div class="form-check">
-                    <input class="form-check-input" type="checkbox" value="General Weakness" id="weakness" name="symptoms[]">
-                    <label class="form-check-label" for="weakness">General Weakness</label>
-                </div>
-                <div class="form-check">
-                    <input class="form-check-input" type="checkbox" value="Rash" id="rash" name="symptoms[]">
-                    <label class="form-check-label" for="rash">Skin/Body Rash</label>
-                </div>
-                <div class="form-check">
-                    <input class="form-check-input" type="checkbox" value="Sore Throat" id="sore_throat" name="symptoms[]">
-                    <label class="form-check-label" for="sore_throat">Sore Throat</label>
-                </div>
-            </div>
-            <div class="mb-3">
-                <label for="actions" class="form-label">Actions Taken</label>
-                <textarea class="form-control" id="actions" name="actions" rows="3" required></textarea>
-            </div>
-            <button type="submit" class="btn btn-primary" name="report">Submit</button>
+                
+
+           </div>
+           <button type="submit" class="btn btn-primary" name="report">Submit</button>
         </form>
     </div>
     <script>
@@ -307,6 +229,25 @@ $conn->close();
         // Call function on page load to apply rules if fields are prefilled
         togglePregnancyField();
     });
+    $(document).ready(function() {
+    // Initialize select2 for search functionality
+    $('#affiliation').select2({
+        placeholder: "Search for a district...",
+        allowClear: true,  // Allow clearing the selection
+        ajax: {
+            url: '../users/fetch_affiliations.php',  // Endpoint to fetch data dynamically
+            dataType: 'json',
+            delay: 250,  // Delay to avoid too many requests on each keystroke
+            processResults: function(data) {
+                return {
+                    results: data  // Process the result and return it
+                };
+            },
+            cache: true
+        },
+        minimumInputLength: 1 // Minimum input length before search is triggered
+    });
+});
 </script>
 
 </body>

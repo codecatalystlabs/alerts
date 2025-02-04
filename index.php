@@ -23,7 +23,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             $_SESSION['user_type'] = $user_type;
             $_SESSION['level'] = $level;
             $_SESSION['affiliation'] = $affiliation;
-            header("Location: manage/alerts.php");
+            header("Location: manage/call_log.php");
             exit();
         } else {
             $error = "Invalid username or password!";

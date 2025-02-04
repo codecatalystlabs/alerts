@@ -48,76 +48,55 @@ $result = $stmt->get_result();
 <body>
     <?php include('../includes/nav.php'); ?>
     <div class="container mt-2">
-        <h2 class="text-center mb-4">Alerts Management</h2>
+        <h2 class="text-center mb-2">Alert Call Log</h2>
         <div class="table-responsive">
             <table class="table table-bordered table-hover">
                 <thead class="table-dark">
                     <tr>
-                        <th>Status</th>
-                        <th>Date</th>
-                        <th>Time</th>
-                        <th>Call Taker</th>
-                       
-                        <th>Name of Person</th>
-                        
-                        <th>Source of Alert</th>
-                        <th>Village</th>
-                        <th>Alert Case Parish</th>
-                        <th>Alert Case District</th>
-                        <th>Sub County</th>
-                        <th>Contact Number</th>
-                        <th>Alert Case Name</th>
-                        <th>Alert Case Age</th>
-                        <th>Alert Case Sex</th>
-                        <th>Alert Case Pregnant Duration</th>
-                        <th>Alert Case Village</th>
-                        
-                        <th>Alert Case Sub County</th>
-                        
-                        <th>Alert Case Nationality</th>
-                        <th>Point of Contact Name</th>
-                        <th>Point of Contact Relationship</th>
-                        <th>Point of Contact Phone</th>
-                        <th>History</th>
-                        <th>Health Facility Visit</th>
-                        <th>Traditional Healer Visit</th>
-                        <th>Symptoms</th>
-                        <th>Actions</th>
+                        <th rowspan="2">Name of Person Calling</th>
+                        <th rowspan="2">Source of Signal</th>
+                        <th rowspan="2">Contact Number of person calling</th>
+                        <th rowspan="2">Alert reported before?</th>
+                        <th colspan="4">Signal location</th>
+                        <th colspan="6">Alert Case</th>  
+                        <th rowspan="2">Time</th>
+                        <th rowspan="2">Action</th>
                     </tr>
+                    <tr>
+                         <th>Village</th>
+                        <th>Parish</th>
+                        <th>Subcounty</th>
+                        <th>District</th>
+                        <th>Name</th>
+                        <th>Age</th>
+                        <th>Sex</th>
+                        <th>Contact</th>
+                        <th>Next of Kin</th>
+                        <th>Contact of Next of Kin</th>
+                        
+                    </tr>
+                </tr>
                 </thead>
                 <tbody>
                     <?php while ($des = $result->fetch_assoc()): ?>
                     <tr id="row-<?php echo $des['id']; ?>" class="<?php echo ($updated_id == $des['id']) ? 'highlight' : ''; ?>">
-                        <td><?php echo htmlspecialchars($des['status']); ?></td>
-                        <td><?php echo htmlspecialchars($des['date']); ?></td>
-                        <td><?php echo htmlspecialchars($des['time']); ?></td>
-                        <td><?php echo htmlspecialchars($des['call_taker']); ?></td>
                         <td><?php echo htmlspecialchars($des['person_reporting']); ?></td>
-                        
                         <td><?php echo htmlspecialchars($des['source_of_alert']); ?></td>
+                        <td><?php echo htmlspecialchars($des['contact_number']); ?></td>
+                        <td><?php echo htmlspecialchars($des['alert_reported_before']); ?></td>
                         <td><?php echo htmlspecialchars($des['village']); ?></td>
                         <td><?php echo htmlspecialchars($des['alert_case_parish']); ?></td>
-                        <td><?php echo htmlspecialchars($des['alert_case_district']); ?></td>
                         <td><?php echo htmlspecialchars($des['sub_county']); ?></td>
-                        <td><?php echo htmlspecialchars($des['contact_number']); ?></td>
+                        <td><?php echo htmlspecialchars($des['alert_case_district']); ?></td>                
                         <td><?php echo htmlspecialchars($des['alert_case_name']); ?></td>
                         <td><?php echo htmlspecialchars($des['alert_case_age']); ?></td>
                         <td><?php echo htmlspecialchars($des['alert_case_sex']); ?></td>
-                        <td><?php echo htmlspecialchars($des['alert_case_pregnant_duration']); ?></td>
-                        <td><?php echo htmlspecialchars($des['alert_case_village']); ?></td>
-                        
-                        <td><?php echo htmlspecialchars($des['alert_case_sub_county']); ?></td>
-                        
-                        <td><?php echo htmlspecialchars($des['alert_case_nationality']); ?></td>
                         <td><?php echo htmlspecialchars($des['point_of_contact_name']); ?></td>
                         <td><?php echo htmlspecialchars($des['point_of_contact_relationship']); ?></td>
                         <td><?php echo htmlspecialchars($des['point_of_contact_phone']); ?></td>
-                        <td><?php echo htmlspecialchars($des['history']); ?></td>
-                        <td><?php echo htmlspecialchars($des['health_facility_visit']); ?></td>
-                        <td><?php echo htmlspecialchars($des['traditional_healer_visit']); ?></td>
-                        <td><?php echo htmlspecialchars($des['symptoms']); ?></td>
+                        <td><?php echo htmlspecialchars($des['time']); ?></td>
                         <td>
-                            <a class="btn btn-primary btn-sm" href="alert_verification.php?id=<?php echo $des['id']; ?>">Edit</a>
+                            <a class="btn btn-primary btn-sm" href="alert_verification.php?id=<?php echo $des['id']; ?>">Verify</a>
                         </td>
                     </tr>
                     <?php endwhile; ?>
