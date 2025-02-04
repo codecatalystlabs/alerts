@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Feb 03, 2025 at 01:32 PM
+-- Generation Time: Feb 04, 2025 at 06:44 AM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -228,16 +228,19 @@ CREATE TABLE `alerts` (
   `lab_result` varchar(10) DEFAULT NULL,
   `lab_result_date` date DEFAULT NULL,
   `is_highlighted` tinyint(1) DEFAULT 0,
-  `assigned_to` varchar(20) DEFAULT NULL
+  `assigned_to` varchar(20) DEFAULT NULL,
+  `alert_reported_before` varchar(5) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Dumping data for table `alerts`
 --
 
-INSERT INTO `alerts` (`id`, `status`, `date`, `time`, `call_taker`, `cif_no`, `person_reporting`, `village`, `sub_county`, `contact_number`, `source_of_alert`, `alert_case_name`, `alert_case_age`, `alert_case_sex`, `alert_case_pregnant_duration`, `alert_case_village`, `alert_case_parish`, `alert_case_sub_county`, `alert_case_district`, `alert_case_nationality`, `point_of_contact_name`, `point_of_contact_relationship`, `point_of_contact_phone`, `history`, `health_facility_visit`, `traditional_healer_visit`, `symptoms`, `actions`, `case_verification_desk`, `field_verification`, `field_verification_decision`, `feedback`, `lab_result`, `lab_result_date`, `is_highlighted`, `assigned_to`) VALUES
-(1, 'Alive', '2025-01-31', '08:31:00', 'Waiswa', 'H90H', 'Waiswa', 'Waiswa', 'Subcounty', '0783229900', 'Health Facility', 'Waiswa', 13, 'Female', 0, 'qwwww', 'wqqwq', 'ewew', 'Kamuli', 'Uganda', 'KJksj', ',m,m,sm', '0786553222', 'Other mass gathering, Contact of suspect/probable/confirmed case', 'ljklska', 'kljlkkkkk', 'Headache, General Weakness, Rash', 'kjlkajda', 'Validated for EMS Evacuation, Safe Dignified Burial Team', '', '', '', 'Positive', '2025-01-31', 1, NULL),
-(2, 'Alive', '2025-02-01', '06:55:00', 'Philip', 'DSDSD', 'nmnmn', 'mnnbnm', 'nbmnbm', '0766555444', 'Community', 'sasddjh', 15, 'Female', 0, 'kalyango', 'an,m,', ',mn,mn,', 'm,nmn', 'Uganda', 'Phil', 'Pjsnn', '0766643212', 'Other mass gathering, Contact of suspect/probable/confirmed case, Contact of sudden/unexplained death', 'hkjk', 'kjhkj', 'Fever, General Weakness, Rash', 'nmbmnbm', NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL);
+INSERT INTO `alerts` (`id`, `status`, `date`, `time`, `call_taker`, `cif_no`, `person_reporting`, `village`, `sub_county`, `contact_number`, `source_of_alert`, `alert_case_name`, `alert_case_age`, `alert_case_sex`, `alert_case_pregnant_duration`, `alert_case_village`, `alert_case_parish`, `alert_case_sub_county`, `alert_case_district`, `alert_case_nationality`, `point_of_contact_name`, `point_of_contact_relationship`, `point_of_contact_phone`, `history`, `health_facility_visit`, `traditional_healer_visit`, `symptoms`, `actions`, `case_verification_desk`, `field_verification`, `field_verification_decision`, `feedback`, `lab_result`, `lab_result_date`, `is_highlighted`, `assigned_to`, `alert_reported_before`) VALUES
+(1, 'Alive', '2025-01-31', '08:31:00', 'Waiswa', 'H90H', 'Waiswa', 'Waiswa', 'Subcounty', '0783229900', 'Health Facility', 'Waiswa', 13, 'Female', 0, 'qwwww', 'wqqwq', 'ewew', 'Kamuli', 'Uganda', 'KJksj', ',m,m,sm', '0786553222', 'Other mass gathering, Contact of suspect/probable/confirmed case', 'ljklska', 'kljlkkkkk', 'Headache, General Weakness, Rash', 'kjlkajda', 'Validated for EMS Evacuation, Safe Dignified Burial Team', '', '', '', 'Positive', '2025-01-31', 1, NULL, ''),
+(2, 'Alive', '2025-02-01', '06:55:00', 'Philip', 'DSDSD', 'nmnmn', 'mnnbnm', 'nbmnbm', '0766555444', 'Community', 'sasddjh', 15, 'Female', 0, 'kalyango', 'an,m,', ',mn,mn,', 'm,nmn', 'Uganda', 'Phil', 'Pjsnn', '0766643212', 'Other mass gathering, Contact of suspect/probable/confirmed case, Contact of sudden/unexplained death', 'hkjk', 'kjhkj', 'Fever, General Weakness, Rash', 'nmbmnbm', NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, ''),
+(3, 'Alive', '2025-02-03', '16:30:00', 'Mbale', 'ERE', 'Mbale', 'Village', 'Subcounty', '0765443221', 'Community', 'Name', 14, 'Male', 0, 'Mbale', 'Mbale', '', 'Mbale', 'Uganda', '07866555555', 'kjlkjl', '078996665', 'Contact of suspect/probable/confirmed case, Contact of sudden/unexplained death', 'saasasa', 'asadsdsd', 'General Weakness, Rash', 'adsds', 'Safe Dignified Burial Team', 'dsdds', 'nbvnbvn', 'nvnbvb', 'Positive', '2025-02-03', 1, NULL, ''),
+(4, '', '2025-02-03', '21:23:00', 'Wklsds', '', '', 'Village', 'Subcounty', '0784333222', '', 'Name', 8, 'Male', NULL, '', 'Parish', '', '', '', 'Kin', '', '0877334332', NULL, '', '', NULL, '', NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, 'Yes');
 
 -- --------------------------------------------------------
 
@@ -263,8 +266,9 @@ CREATE TABLE `users` (
 --
 
 INSERT INTO `users` (`id`, `username`, `password`, `gname`, `surname`, `oname`, `email`, `affiliation`, `user_type`, `level`) VALUES
-(1, 'pwaiswa', '$2y$10$p6/IIlQDOjKeb1CvxWq1YeEcrhIYFroODMA.EQ1TYDZo.y2BGdyPC', 'Philip', 'Waiswa', 'Alex', 'philipwaiswa@gmail.com', 'MoH', '', 'Admin'),
-(3, 'kamuli', '$2y$10$/NfW3o0LVFaK6yRhT/s9Le2ZQSaj.pVspivD80zvMT9S2F2DU6XNq', 'Kamuli', 'Kamuli', 'Kamuli', 'kamuli@ebola.net', 'Kamuli', '', NULL);
+(1, 'pwaiswa', '$2y$10$p6/IIlQDOjKeb1CvxWq1YeEcrhIYFroODMA.EQ1TYDZo.y2BGdyPC', 'Philip', 'Waiswa', 'Alex', 'philipwaiswa@gmail.com', 'MoH Call Centre', '', 'Admin'),
+(3, 'kamuli', '$2y$10$/NfW3o0LVFaK6yRhT/s9Le2ZQSaj.pVspivD80zvMT9S2F2DU6XNq', 'Kamuli', 'Kamuli', 'Kamuli', 'kamuli@ebola.net', 'Kamuli', '', NULL),
+(4, 'mbale', '$2y$10$ykcyCAV4dgO9UvP30KU9t.KByXQXpu2mbJe8mPTGHvhEYojm3/72S', 'Mbale', 'Mbale', 'Mbale', 'mbale@mbale.com', 'Mbale', '', NULL);
 
 --
 -- Indexes for dumped tables
@@ -303,13 +307,13 @@ ALTER TABLE `admin_units`
 -- AUTO_INCREMENT for table `alerts`
 --
 ALTER TABLE `alerts`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
 
 --
 -- AUTO_INCREMENT for table `users`
 --
 ALTER TABLE `users`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
 COMMIT;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
