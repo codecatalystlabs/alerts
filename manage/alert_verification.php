@@ -3,7 +3,7 @@ session_start();
 require('../conn.php');
 
 if (!isset($_SESSION['user_id']) || !isset($_SESSION['level'])) {
-    header("Location: ../index.php");
+    header("Location: login.php");
     exit();
 }
 

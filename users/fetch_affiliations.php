@@ -12,7 +12,7 @@ $result = $stmt->get_result();
 
 $data = [];
 while ($row = $result->fetch_assoc()) {
-    $data[] = ["id" => $row['id'], "text" => $row['name']];
+    $data[] = ["id" => $row['name'], "text" => $row['name']];
 }
 
 echo json_encode($data);

@@ -1,8 +1,9 @@
 <?php
 //session_start();
-require('../conn.php');
-$level = $_SESSION['level'];
-$_SESSION['level'] = $level;
+require('conn.php');
+//$level = $_SESSION['level'];
+//$_SESSION['level'] = $level;
+//$username = $_SESSION['username'];
 ?>
 <!DOCTYPE html>
 <html>
@@ -16,43 +17,23 @@ $_SESSION['level'] = $level;
 <nav>
     
     <ol class="menu">
+        <?php if (isset($_SESSION['user_id'])): ?>
         <li><a href="../manage/index.php">Add Alerts</a></li>
+        <?php endif; ?>
+        <?php if (isset($_SESSION['user_id'])): ?>
         <li><a href="../manage/alerts.php">View Alerts</a></li>
+        <?php endif; ?>
+        <?php if (isset($_SESSION['user_id'])): ?>
         <li><a href="../manage/call_log.php">View Call Logs</a></li>
+        <?php endif; ?>
         <?php if (isset($_SESSION['level']) && $_SESSION['level'] === 'Admin'): ?>
             <li><a href="../users/index.php">Manage Users</a></li>
         <?php endif; ?>
-        <!-- <li><a href="news.php">Manage Metadata</a></li> -->
+        <?php if (isset($_SESSION['user_id'])): ?>
         <li class="nav-item"><a class="nav-link" href="../logout.php">Logout</a></li>
-        <!-- <li><a href="resources.php">Resources</a></li>
-        <li>
-            <a href="learn.php">Learn more about self-care</a>
-            <ol class="submenu">
-                <li>
-                    <a href="srh.php">SRH</a>
-                    <ol class="submenu2">
-                        <li><a href="hiv.php">HIV</a></li>
-                    </ol>
-                </li>
-                <li>
-                    <a href="#">Maternal Health</a>
-                    <ol class="submenu2">
-                <li>
-                    <a href="anc.php">ANC</a>
-                </li>
-                <li>
-                    <a href="pac.php">PAC</a>
-                </li>
-            </ol>
-        </li>
-                <li><a href="mental.php">Mental Health</a></li>
-                <li><a href="workplace.php">Workplace Support (OHS)</a></li>
-                <li><a href="ncd.php">Non-communicable Diseases</a></li>
-
-            </ol>
-        </li>
-        <li><a href="briefs.php">Policy Briefs</a></li> -->
         
+            <?php endif; ?>
+            <li class="nav-item"><a class="nav-link" href="manage/login.php">Log in</a></li>
     </ol>
 </nav>
 <script async src="https://platform.twitter.com/widgets.js" charset="utf-8"></script>

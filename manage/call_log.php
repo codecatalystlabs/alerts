@@ -1,7 +1,7 @@
 <?php
 session_start();
-if (!isset($_SESSION['user_id'])) {
-    header("Location: ../index.php");
+if (!isset($_SESSION['user_id']) && !isset($_SESSION['affiliation'])) {
+    header("Location: login.php");
     exit();
 }
 
@@ -11,6 +11,7 @@ $updated_id = isset($_GET['updated_id']) ? $_GET['updated_id'] : null;
 $affiliation = $_SESSION['affiliation'];
 $user_type = $_SESSION['user_type'];
 $username = $_SESSION['username'];
+$level = $_SESSION['level'];
 
 // Base query
 $sql = "SELECT * FROM alerts";
@@ -80,7 +81,7 @@ $result = $stmt->get_result();
                 <tbody>
                     <?php while ($des = $result->fetch_assoc()): ?>
                     <tr id="row-<?php echo $des['id']; ?>" class="<?php echo ($updated_id == $des['id']) ? 'highlight' : ''; ?>">
-                        <td><?php echo htmlspecialchars($des['person_reporting']); ?></td>
+                        <td><?php echo htmlspecialchars($des['call_taker']); ?></td>
                         <td><?php echo htmlspecialchars($des['source_of_alert']); ?></td>
                         <td><?php echo htmlspecialchars($des['contact_number']); ?></td>
                         <td><?php echo htmlspecialchars($des['alert_reported_before']); ?></td>

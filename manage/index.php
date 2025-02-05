@@ -4,7 +4,7 @@ require('../conn.php');
 
 // Check if user is logged in and has necessary permissions
 if (!isset($_SESSION['user_id']) || !isset($_SESSION['level'])) {
-    header("Location: ../index.php");
+    header("Location: login.php");
     exit();
 }
 
@@ -18,8 +18,8 @@ if (isset($_POST['report'])) {
     $alert_reported_before = mysqli_real_escape_string($conn, $_POST['alert_reported_before']);
     $date = mysqli_real_escape_string($conn, $_POST['date']);
     $time = mysqli_real_escape_string($conn, $_POST['time']);
-    $call_taker = mysqli_real_escape_string($conn, $_POST['call_taker']);
-    // $person_reporting = mysqli_real_escape_string($conn, $_POST['person_reporting']);
+    //$call_taker = mysqli_real_escape_string($conn, $_POST['call_taker']);
+    $person_reporting = mysqli_real_escape_string($conn, $_POST['person_reporting']);
     $village = mysqli_real_escape_string($conn, $_POST['village']);
     $sub_county = mysqli_real_escape_string($conn, $_POST['sub_county']);
     $contact_number = mysqli_real_escape_string($conn, $_POST['contact_number']);
@@ -29,6 +29,7 @@ if (isset($_POST['report'])) {
     $alert_case_parish = mysqli_real_escape_string($conn, $_POST['alert_case_parish']);
     $point_of_contact_name = mysqli_real_escape_string($conn, $_POST['point_of_contact_name']);
     $point_of_contact_phone = mysqli_real_escape_string($conn, $_POST['point_of_contact_phone']);
+    $alert_case_district = mysqli_real_escape_string($conn, $_POST['alert_case_district']);
     
     // Optional: Handle additional form data like source_of_alert, pregnant_duration, etc. based on your form
     // Example:
@@ -37,19 +38,20 @@ if (isset($_POST['report'])) {
     // $alert_case_village = mysqli_real_escape_string($conn, $_POST['alert_case_village']);
     
     // SQL query to insert data
-    $sql = "INSERT INTO alerts (date, time, call_taker, village, sub_county, contact_number, alert_case_name, alert_case_age, alert_case_sex, alert_case_parish, point_of_contact_name, point_of_contact_phone,alert_reported_before)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+    $sql = "INSERT INTO alerts (date, time, person_reporting, village, sub_county, contact_number, alert_case_name, alert_case_age, alert_case_sex, alert_case_parish, point_of_contact_name, point_of_contact_phone,alert_reported_before,alert_case_district)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
     
     $stmt = $conn->prepare($sql);
     
     // Bind parameters to avoid SQL injection
-    $stmt->bind_param(
-        "sssssssisssss", 
-        $date, $time, $call_taker, $village, $sub_county, 
-        $contact_number, $alert_case_name, $alert_case_age, $alert_case_sex, 
-        $alert_case_parish, $point_of_contact_name, $point_of_contact_phone, 
-        $alert_reported_before
-    );
+  $stmt->bind_param(
+    "sssssssisssss", 
+    $date, $time, $call_taker, $village, $sub_county, 
+    $contact_number, $alert_case_name, $alert_case_age, // i for age
+    $alert_case_sex, $alert_case_parish, 
+    $point_of_contact_name, $point_of_contact_phone, 
+    $alert_reported_before, $alert_case_district
+);
     
     // Execute and check if insertion is successful
     if ($stmt->execute()) {
@@ -113,7 +115,7 @@ if (isset($_POST['report'])) {
                 </div>
                 <div class="col-md-3 mb-3">
                     <label for="call_taker" class="form-label">Name of person calling</label>
-                    <input type="text" class="form-control" id="call_taker" name="call_taker">
+                    <input type="text" class="form-control" id="person_reporting" name="person_reporting">
                 </div>
                 <div class="col-md-3 mb-3">
                     <label for="contact_number" class="form-label">Number of person calling</label>
@@ -138,11 +140,11 @@ if (isset($_POST['report'])) {
                 </div>
                 
                 <div class="col-md-3 mb-3">
-                    <label for="affiliation" class="form-label">District</label>
-                        <select class="form-select" id="affiliation" name="affiliation">
+                    <label for="alert_case_district" class="form-label">District</label>
+                        <select class="form-select" id="alert_case_district" name="alert_case_district">
                             <option value="">-- Select District --</option>
                             <?php while ($row = $result2->fetch_assoc()): ?>
-                                <option value="<?= htmlspecialchars($row['id']); ?>">
+                                <option value="<?= htmlspecialchars($row['name']); ?>">
                                     <?= htmlspecialchars($row['name']); ?>
                                 </option>
                             <?php endwhile; ?>
@@ -173,8 +175,6 @@ if (isset($_POST['report'])) {
         </div>
             <div class="row">
 
-            
-                
                 <div class="col-md-3 mb-3">
                     <label for="point_of_contact_phone" class="form-label">Next of Kin Phone Number</label>
                     <input type="tel" class="form-control" id="point_of_contact_phone" name="point_of_contact_phone">
@@ -231,7 +231,7 @@ if (isset($_POST['report'])) {
     });
     $(document).ready(function() {
     // Initialize select2 for search functionality
-    $('#affiliation').select2({
+    $('#alert_case_district').select2({
         placeholder: "Search for a district...",
         allowClear: true,  // Allow clearing the selection
         ajax: {
