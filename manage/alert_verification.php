@@ -51,7 +51,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['report'])) {
     $health_facility_visit = mysqli_real_escape_string($conn, $_POST['health_facility_visit']);
     $traditional_healer_visit = mysqli_real_escape_string($conn, $_POST['traditional_healer_visit']);
     $symptoms = isset($_POST['symptoms']) ? implode(", ", array_map(fn($symptom) => mysqli_real_escape_string($conn, $symptom), $_POST['symptoms'])) : null;
-    $actions = mysqli_real_escape_string($conn, $_POST['actions']);
+    $actions = isset($_POST['actions']) ? implode(", ", array_map(fn($action) => mysqli_real_escape_string($conn, $action), $_POST['actions'])) : null;
+    //$actions = mysqli_real_escape_string($conn, $_POST['actions']);
 
     $update_sql = "UPDATE alerts SET status=?, date=?, time=?, call_taker=?, cif_no=?, person_reporting=?, village=?, sub_county=?, contact_number=?, source_of_alert=?, alert_case_name=?, alert_case_age=?, alert_case_sex=?, alert_case_pregnant_duration=?, alert_case_village=?, alert_case_parish=?, alert_case_sub_county=?, alert_case_district=?, alert_case_nationality=?, point_of_contact_name=?, point_of_contact_relationship=?, point_of_contact_phone=?, history=?, health_facility_visit=?, traditional_healer_visit=?, symptoms=?, actions=? WHERE id=?";
     
@@ -271,8 +272,39 @@ $conn->close();
                 </div>
             </div>
             <div class="mb-3">
-                <label for="actions" class="form-label">Actions Taken</label>
-                <textarea class="form-control" id="actions" name="actions" rows="3"></textarea>
+                <label for="actions" class="form-label">Actions</label>
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" value="Case Verification Desk" id="fever" name="actions[]" <?= (isset($alert_data['actions']) && strpos($alert_data['actions'], 'Case Verification Desk') !== false) ? 'checked' : ''; ?>>
+                    <label class="form-check-label" for="Case Verification Desk">Case Verification Desk</label>
+                </div>
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" value="Discarded" id="fever" name="actions[]" <?= (isset($alert_data['actions']) && strpos($alert_data['actions'], 'Discarded') !== false) ? 'checked' : ''; ?>>
+                    <label class="form-check-label" for="Discarded">Discarded</label>
+                </div>
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" value="Validated for EMS Evacuation" id="Validated for EMS Evacuation" name="actions[]" <?= (isset($alert_data['actions']) && strpos($alert_data['actions'], 'Validated for EMS Evacuation') !== false) ? 'checked' : ''; ?>>
+                    <label class="form-check-label" for="Validated for EMS Evacuation">Validated for EMS Evacuation</label>
+                </div>
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" value="Safe Dignified Burial team" id="Safe Dignified Burial team" name="actions[]" <?= (isset($alert_data['actions']) && strpos($alert_data['actions'], '') !== false) ? 'checked' : 'Safe Dignified Burial team'; ?>>
+                    <label class="form-check-label" for="Safe Dignified Burial team">Safe Dignified Burial team</label>
+                </div>
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" value="For Field Verification" id="For Field Verification" name="actions[]" <?= (isset($alert_data['actions']) && strpos($alert_data['actions'], 'For Field Verification') !== false) ? 'checked' : 'For Field Verification'; ?>>
+                    <label class="form-check-label" for="For Field Verification">For Field Verification</label>
+                </div>
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" value="Call to verify and follow-up in 24hrs" id="Call to verify and follow-up in 24hrs" name="actions[]" <?= (isset($alert_data['actions']) && strpos($alert_data['actions'], 'Call to verify and follow-up in 24hrs') !== false) ? 'checked' : ''; ?>>
+                    <label class="form-check-label" for="Call to verify and follow-up in 24hrs">Call to verify and follow-up in 24hrs</label>
+                </div>
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" value="" id="For review" name="actions[]" <?= (isset($alert_data['actions']) && strpos($alert_data['actions'], 'For review') !== false) ? 'checked' : ''; ?>>
+                    <label class="form-check-label" for="For review">For review</label>
+                </div>
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" value="Epi link" id="Epi link" name="actions[]" <?= (isset($alert_data['actions']) && strpos($alert_data['actions'], 'Epi link') !== false) ? 'checked' : ''; ?>>
+                    <label class="form-check-label" for="Epi link">Epi link</label>
+                </div>
             </div>
             <button type="submit" class="btn btn-primary" name="report">Submit</button>
         </form>

@@ -18,6 +18,7 @@ $_SESSION['level'] = $level;
     <ol class="menu">
         <li><a href="../manage/index.php">Add Alerts</a></li>
         <li><a href="../manage/alerts.php">View Alerts</a></li>
+        <li><a href="../manage/call_log.php">View Call Logs</a></li>
         <?php if (isset($_SESSION['level']) && $_SESSION['level'] === 'Admin'): ?>
             <li><a href="../users/index.php">Manage Users</a></li>
         <?php endif; ?>

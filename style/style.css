@@ -132,3 +132,18 @@ nav {
     left: 100%;
     top: 0;
 }
+.truncate {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 150px; /* Adjust as needed */
+}
+.expanded {
+    white-space: normal;
+    overflow: visible;
+}
+.read-more {
+    color: blue;
+    cursor: pointer;
+    font-size: 0.85em;
+}
