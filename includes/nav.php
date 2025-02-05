@@ -28,12 +28,15 @@ require('conn.php');
         <?php endif; ?>
         <?php if (isset($_SESSION['level']) && $_SESSION['level'] === 'Admin'): ?>
             <li><a href="../users/index.php">Manage Users</a></li>
+            <li><a href="../upload/upload.php">Upload Alerts</a></li>
         <?php endif; ?>
         <?php if (isset($_SESSION['user_id'])): ?>
         <li class="nav-item"><a class="nav-link" href="../logout.php">Logout</a></li>
         
             <?php endif; ?>
+            <?php if (!isset($_SESSION['user_id'])): ?>
             <li class="nav-item"><a class="nav-link" href="manage/login.php">Log in</a></li>
+            <?php endif; ?>
     </ol>
 </nav>
 <script async src="https://platform.twitter.com/widgets.js" charset="utf-8"></script>

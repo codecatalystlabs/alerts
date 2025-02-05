@@ -1,16 +1,16 @@
 <?php
 require('conn.php');
-// Query to fetch admin units (if needed for your form)
-$sql2 = "SELECT id, name FROM admin_units"; // Adjust column names as per your DB
+
+// Fetch admin units
+$sql2 = "SELECT id, name FROM admin_units";
 $result2 = $conn->query($sql2);
 
 // Handle form submission
 if (isset($_POST['report'])) {
-    // Capture and sanitize form data
+    // Sanitize form data
     $alert_reported_before = mysqli_real_escape_string($conn, $_POST['alert_reported_before']);
     $date = mysqli_real_escape_string($conn, $_POST['date']);
     $time = mysqli_real_escape_string($conn, $_POST['time']);
-    //$call_taker = mysqli_real_escape_string($conn, $_POST['call_taker']);
     $person_reporting = mysqli_real_escape_string($conn, $_POST['person_reporting']);
     $village = mysqli_real_escape_string($conn, $_POST['village']);
     $sub_county = mysqli_real_escape_string($conn, $_POST['sub_county']);
@@ -23,40 +23,20 @@ if (isset($_POST['report'])) {
     $point_of_contact_phone = mysqli_real_escape_string($conn, $_POST['point_of_contact_phone']);
     $alert_case_district = mysqli_real_escape_string($conn, $_POST['alert_case_district']);
     $alert_from = 'self_alert';
-    
-    
-    // SQL query to insert data
-    $sql = "INSERT INTO alerts (date, time, person_reporting, village, sub_county, contact_number, alert_case_name, alert_case_age, alert_case_sex, alert_case_parish, point_of_contact_name, point_of_contact_phone, alert_reported_before, alert_case_district, alert_from)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
-    
+
+    // Insert data
+    $sql = "INSERT INTO alerts (date, time, person_reporting, village, sub_county, contact_number, alert_case_name, alert_case_age, alert_case_sex, alert_case_parish, point_of_contact_name, point_of_contact_phone, alert_reported_before, alert_case_district, alert_from) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
     $stmt = $conn->prepare($sql);
-    
-    // Bind parameters to avoid SQL injection
-    $stmt->bind_param(
-        "sssssssisssssss", 
-        $date, $time, $person_reporting, $village, $sub_county, 
-        $contact_number, $alert_case_name, $alert_case_age, 
-        $alert_case_sex, $alert_case_parish, 
-        $point_of_contact_name, $point_of_contact_phone, 
-        $alert_reported_before, $alert_case_district, $alert_from
-    );
-    
-    
-    // Execute and check if insertion is successful
+    $stmt->bind_param("sssssssisssssss", $date, $time, $person_reporting, $village, $sub_county, $contact_number, $alert_case_name, $alert_case_age, $alert_case_sex, $alert_case_parish, $point_of_contact_name, $point_of_contact_phone, $alert_reported_before, $alert_case_district, $alert_from);
+
     if ($stmt->execute()) {
-        echo "<script>
-                  document.addEventListener('DOMContentLoaded', function() {
-                 document.getElementById('success-message').innerText = 'Alert submitted successfully!';
-                 document.getElementById('success-message').style.display = 'block';
-        });
-    </script>";
-        header("Location: " . $_SERVER['PHP_SELF']); // Redirect to the same page after successful submission
+        echo "<script>document.addEventListener('DOMContentLoaded', function() { document.getElementById('success-message').innerText = 'Alert submitted successfully!'; document.getElementById('success-message').style.display = 'block'; });</script>";
+        header("Location: " . $_SERVER['PHP_SELF']);
         exit();
     } else {
-        echo "Error: " . $stmt->error; // Show error if insertion fails
+        echo "Error: " . $stmt->error;
     }
-    
-    // Close prepared statement and database connection
+
     $stmt->close();
     $conn->close();
 }
@@ -223,7 +203,7 @@ if (isset($_POST['report'])) {
         placeholder: "Search for a district...",
         allowClear: true,  // Allow clearing the selection
         ajax: {
-            url: '../users/fetch_affiliations.php',  // Endpoint to fetch data dynamically
+            url: 'users/fetch_affiliations.php',  // Endpoint to fetch data dynamically
             dataType: 'json',
             delay: 250,  // Delay to avoid too many requests on each keystroke
             processResults: function(data) {
