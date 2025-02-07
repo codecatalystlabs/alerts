@@ -50,12 +50,14 @@ if (isset($_POST['upload'])) {
                     point_of_contact_name, point_of_contact_relationship, symptoms, actions, alert_reported_before,alert_case_village,alert_case_parish,alert_case_sub_county,alert_case_district,contact_number)
                     VALUES ('$status', '$date', '$time', '$call_taker', '$person_reporting', '$source_of_alert',
                     '$alert_case_name', '$alert_case_age', '$alert_case_sex', '$point_of_contact_phone',
-                    '$point_of_contact_name', '$point_of_contact_relationship', '$symptoms', '$actions', '$alert_reported_before','$alert_case_village','$alert_case_parish','$alert_case_sub_county','$alert_case_district','$contact_number')";
+                    '$point_of_contact_name', '$point_of_contact_relationship', '$symptoms', '$actions', 
+                    '$alert_reported_before','$alert_case_village','$alert_case_parish','$alert_case_sub_county',
+                    '$alert_case_district','$contact_number')";
 
             if ($conn->query($sql) !== TRUE) {
                 echo "Error inserting data for $alert_case_name: " . $conn->error . "<br>";
             } else {
-                echo "Inserted alert for: $alert_case_name<br>";
+                echo "Inserted alert for: $alert_case_name <br>";
             }
         }
         fclose($handle);

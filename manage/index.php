@@ -45,8 +45,8 @@ if (isset($_POST['report'])) {
     
     // Bind parameters to avoid SQL injection
   $stmt->bind_param(
-    "sssssssisssss", 
-    $date, $time, $call_taker, $village, $sub_county, 
+    "sssssssissssss", 
+    $date, $time, $person_reporting, $village, $sub_county, 
     $contact_number, $alert_case_name, $alert_case_age, // i for age
     $alert_case_sex, $alert_case_parish, 
     $point_of_contact_name, $point_of_contact_phone, 
@@ -159,7 +159,7 @@ if (isset($_POST['report'])) {
             </div>
             <div class="col-md-2 mb-3">
                     <label for="alert_case_age" class="form-label">Case Age</label>
-                    <input type="number" class="form-control" id="alert_case_age" name="alert_case_age">
+                    <input type="number" class="form-control" id="alert_case_age" name="alert_case_age" placeholder="In years">
                 </div>
                 <div class="col-md-3 mb-3">
                     <label for="alert_case_sex" class="form-label">Case Sex</label>

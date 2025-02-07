@@ -188,19 +188,17 @@ $conn->close();
                     <label for="alert_case_parish" class="form-label">Parish</label>
                     <input type="text" class="form-control" id="alert_case_parish" name="alert_case_parish" value="<?= isset($alert_data['alert_case_parish']) ? htmlspecialchars($alert_data['alert_case_parish']) : ''; ?>">
                 </div>
-                <label for="affiliation" class="form-label">District</label>
-                    <select class="form-select" id="affiliation" name="affiliation">
+                <div class="col-md-4 mb-3">
+                <label for="alert_case_district" class="form-label">District</label>
+                    <select class="form-select" id="alert_case_district" name="alert_case_district">
                         <option value="">-- Select District --</option>
                         <?php while ($row = $result2->fetch_assoc()): ?>
                             <option value="<?= htmlspecialchars($row['id']); ?>">
                                 <?= htmlspecialchars($row['name']); ?>
                             </option>
                         <?php endwhile; ?>
-                    </select>   
-                <div class="col-md-4 mb-3">
-                    <label for="alert_case_district" class="form-label">District</label>
-                    <input type="text" class="form-control" id="alert_case_district" name="alert_case_district" >
-                </div>
+                    </select>  
+                    </div> 
             </div>
             <div class="row">
             <div class="col-md-3 mb-3">
@@ -270,6 +268,34 @@ $conn->close();
                     <input class="form-check-input" type="checkbox" value="Sore Throat" id="sore_throat" name="symptoms[]" <?= (isset($alert_data['symptoms']) && strpos($alert_data['symptoms'], 'Sore Throat') !== false) ? 'checked' : ''; ?>>
                     <label class="form-check-label" for="sore_throat">Sore Throat</label>
                 </div>
+                <div class="form-check col-md-3">
+                    <input class="form-check-input" type="checkbox" value="vomiting" id="vomiting" name="symptoms[]" <?= (isset($alert_data['symptoms']) && strpos($alert_data['symptoms'], 'vomiting') !== false) ? 'checked' : ''; ?>>
+                    <label class="form-check-label" for="vomiting">Vomiting</label>
+                </div>
+                <div class="form-check col-md-3">
+                    <input class="form-check-input" type="checkbox" value="bleeding" id="bleeding" name="symptoms[]" <?= (isset($alert_data['symptoms']) && strpos($alert_data['symptoms'], 'bleeding') !== false) ? 'checked' : ''; ?>>
+                    <label class="form-check-label" for="bleeding">Bleeding</label>
+                </div>
+                <div class="form-check col-md-3">
+                    <input class="form-check-input" type="checkbox" value="Abdominal Pain" id="Abdominal Pain" name="symptoms[]" <?= (isset($alert_data['symptoms']) && strpos($alert_data['symptoms'], 'abdominal_pain') !== false) ? 'checked' : ''; ?>>
+                    <label class="form-check-label" for="Abdominal Pain">Abdominal Pain</label>
+                </div>
+                <div class="form-check col-md-3">
+                    <input class="form-check-input" type="checkbox" value="Aching Muscles/Joints" id="aching_muscle" name="symptoms[]" <?= (isset($alert_data['symptoms']) && strpos($alert_data['symptoms'], 'Aching Muscles/Joints') !== false) ? 'checked' : ''; ?>>
+                    <label class="form-check-label" for="aching_muscle">Aching Muscles/ Pain</label>
+                </div>
+                <div class="form-check col-md-3">
+                    <input class="form-check-input" type="checkbox" value="Difficulty Swallowing" id="difficult_swallowing" name="symptoms[]" <?= (isset($alert_data['symptoms']) && strpos($alert_data['symptoms'], 'Difficulty Swallowing') !== false) ? 'checked' : ''; ?>>
+                    <label class="form-check-label" for="Difficulty Swallowing">Difficulty Swallowing</label>
+                </div>
+                <div class="form-check col-md-3">
+                    <input class="form-check-input" type="checkbox" value="Difficulty Breathing" id="difficulty_breathing" name="symptoms[]" <?= (isset($alert_data['symptoms']) && strpos($alert_data['symptoms'], 'Difficulty Breathing') !== false) ? 'checked' : ''; ?>>
+                    <label class="form-check-label" for="Difficulty Breathing">Difficulty Breathing</label>
+                </div>
+                <div class="form-check col-md-3">
+                    <input class="form-check-input" type="checkbox" value="Lethergy/Weakness" id="lethergy_weakness" name="symptoms[]" <?= (isset($alert_data['symptoms']) && strpos($alert_data['symptoms'], 'Lethergy/Weakness') !== false) ? 'checked' : ''; ?>>
+                    <label class="form-check-label" for="Lethergy/Weakness">Lethergy/Weakness</label>
+                </div>
             </div>
             <div class="mb-3">
                 <label for="actions" class="form-label">Actions</label>
@@ -304,6 +330,30 @@ $conn->close();
                 <div class="form-check">
                     <input class="form-check-input" type="checkbox" value="Epi link" id="Epi link" name="actions[]" <?= (isset($alert_data['actions']) && strpos($alert_data['actions'], 'Epi link') !== false) ? 'checked' : ''; ?>>
                     <label class="form-check-label" for="Epi link">Epi link</label>
+                </div>
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" value="Samples Picked" id="Samples Picked" name="actions[]" <?= (isset($alert_data['actions']) && strpos($alert_data['actions'], 'Samples Picked') !== false) ? 'checked' : ''; ?>>
+                    <label class="form-check-label" for="Samples Picked">Samples Picked</label>
+                </div>
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" value="In Isolation" id="Isolated" name="actions[]" <?= (isset($alert_data['actions']) && strpos($alert_data['actions'], 'In Isolation') !== false) ? 'checked' : ''; ?>>
+                    <label class="form-check-label" for="In Isolated">In Isolation</label>
+                </div>
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" value="In Quarantine" id="In_Quarantine" name="actions[]" <?= (isset($alert_data['actions']) && strpos($alert_data['actions'], 'In Quarantine') !== false) ? 'checked' : ''; ?>>
+                    <label class="form-check-label" for="In_Quarantine">In Quarantine</label>
+                </div>
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" value="Pending Lab Results" id="Pending_Lab_Results" name="actions[]" <?= (isset($alert_data['actions']) && strpos($alert_data['actions'], 'Pending Lab Results') !== false) ? 'checked' : ''; ?>>
+                    <label class="form-check-label" for="Pending Lab Results">Pending Lab Results</label>
+                </div>
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" value="Pending EMS Pickup" id="Pending_EMS_Pickup" name="actions[]" <?= (isset($alert_data['actions']) && strpos($alert_data['actions'], 'Pending EMS Pickup') !== false) ? 'checked' : ''; ?>>
+                    <label class="form-check-label" for="Pending_EMS_Pickup">Pending EMS Pickup</label>
+                </div>
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" value="Forwarded to EMS" id="Forwarded_to_EMS" name="actions[]" <?= (isset($alert_data['actions']) && strpos($alert_data['actions'], 'Forwarded to EMS') !== false) ? 'checked' : ''; ?>>
+                    <label class="form-check-label" for="Forwarded to EMS">Forwarded to EMS</label>
                 </div>
             </div>
             <button type="submit" class="btn btn-primary" name="report">Submit</button>
@@ -355,7 +405,7 @@ $conn->close();
     });
     $(document).ready(function() {
     // Initialize select2 for search functionality
-    $('#affiliation').select2({
+    $('#alert_case_district').select2({
         placeholder: "Search for a district...",
         allowClear: true,  // Allow clearing the selection
         ajax: {

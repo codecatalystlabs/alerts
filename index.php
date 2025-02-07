@@ -22,12 +22,13 @@ if (isset($_POST['report'])) {
     $point_of_contact_name = mysqli_real_escape_string($conn, $_POST['point_of_contact_name']);
     $point_of_contact_phone = mysqli_real_escape_string($conn, $_POST['point_of_contact_phone']);
     $alert_case_district = mysqli_real_escape_string($conn, $_POST['alert_case_district']);
-    $alert_from = 'self_alert';
+    $alert_from = 'Community Alerts';
+    $symptoms = isset($_POST['symptoms']) ? implode(", ", array_map(fn($symptom) => mysqli_real_escape_string($conn, $symptom), $_POST['symptoms'])) : null;
 
     // Insert data
-    $sql = "INSERT INTO alerts (date, time, person_reporting, village, sub_county, contact_number, alert_case_name, alert_case_age, alert_case_sex, alert_case_parish, point_of_contact_name, point_of_contact_phone, alert_reported_before, alert_case_district, alert_from) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+    $sql = "INSERT INTO alerts (date, time, person_reporting, village, sub_county, contact_number, alert_case_name, alert_case_age, alert_case_sex, alert_case_parish, point_of_contact_name, point_of_contact_phone, alert_reported_before, alert_case_district, alert_from, symptoms) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
     $stmt = $conn->prepare($sql);
-    $stmt->bind_param("sssssssisssssss", $date, $time, $person_reporting, $village, $sub_county, $contact_number, $alert_case_name, $alert_case_age, $alert_case_sex, $alert_case_parish, $point_of_contact_name, $point_of_contact_phone, $alert_reported_before, $alert_case_district, $alert_from);
+    $stmt->bind_param("sssssssissssssss", $date, $time, $person_reporting, $village, $sub_county, $contact_number, $alert_case_name, $alert_case_age, $alert_case_sex, $alert_case_parish, $point_of_contact_name, $point_of_contact_phone, $alert_reported_before, $alert_case_district, $alert_from, $symptoms);
 
     if ($stmt->execute()) {
         echo "<script>document.addEventListener('DOMContentLoaded', function() { document.getElementById('success-message').innerText = 'Alert submitted successfully!'; document.getElementById('success-message').style.display = 'block'; });</script>";
@@ -145,11 +146,64 @@ if (isset($_POST['report'])) {
                 <input type="text" class="form-control" id="point_of_contact_name" name="point_of_contact_name">
             </div>
             <div class="col-md-3 mb-3">
-                    <label for="point_of_contact_phone" class="form-label">Next of Kin Phone Number</label>
-                    <input type="tel" class="form-control" id="point_of_contact_phone" name="point_of_contact_phone">
-                </div>
+                <label for="point_of_contact_phone" class="form-label">Next of Kin Phone Number</label>
+                <input type="tel" class="form-control" id="point_of_contact_phone" name="point_of_contact_phone">
+            </div>
         </div>
-            
+        <div class="row">
+                <h3>Signs and Symptoms</h3>
+                <div class="form-check col-md-3">
+                    <input class="form-check-input" type="checkbox" value="Fever" id="fever" name="symptoms[]" <?= (isset($alert_data['symptoms']) && strpos($alert_data['symptoms'], 'Fever') !== false) ? 'checked' : ''; ?>>
+                    <label class="form-check-label" for="fever">Fever (&ge;38&deg;C)</label>
+                </div>
+                <div class="form-check col-md-3">
+                    <input class="form-check-input" type="checkbox" value="Headache" id="headache" name="symptoms[]" <?= (isset($alert_data['symptoms']) && strpos($alert_data['symptoms'], 'Headache') !== false) ? 'checked' : ''; ?>>
+                    <label class="form-check-label" for="headache">Headache</label>
+                </div>
+                <div class="form-check col-md-3">
+                    <input class="form-check-input" type="checkbox" value="General Weakness" id="weakness" name="symptoms[]" <?= (isset($alert_data['symptoms']) && strpos($alert_data['symptoms'], 'General Weakness') !== false) ? 'checked' : ''; ?>>
+                    <label class="form-check-label" for="weakness">General Weakness</label>
+                </div>
+                <div class="form-check col-md-3">
+                    <input class="form-check-input" type="checkbox" value="Rash" id="rash" name="symptoms[]" <?= (isset($alert_data['symptoms']) && strpos($alert_data['symptoms'], 'rash') !== false) ? 'checked' : ''; ?>>
+                    <label class="form-check-label" for="rash">Skin/Body Rash</label>
+                </div>
+            </div>
+            <div class="row">
+                <div class="form-check col-md-2 mb-3">
+                    <input class="form-check-input" type="checkbox" value="Sore Throat" id="sore_throat" name="symptoms[]" <?= (isset($alert_data['symptoms']) && strpos($alert_data['symptoms'], 'Sore Throat') !== false) ? 'checked' : ''; ?>>
+                    <label class="form-check-label" for="sore_throat">Sore Throat</label>
+                </div>
+                <div class="form-check col-md-3">
+                    <input class="form-check-input" type="checkbox" value="vomiting" id="vomiting" name="symptoms[]" <?= (isset($alert_data['symptoms']) && strpos($alert_data['symptoms'], 'vomiting') !== false) ? 'checked' : ''; ?>>
+                    <label class="form-check-label" for="vomiting">Vomiting</label>
+                </div>
+                <div class="form-check col-md-3">
+                    <input class="form-check-input" type="checkbox" value="bleeding" id="bleeding" name="symptoms[]" <?= (isset($alert_data['symptoms']) && strpos($alert_data['symptoms'], 'bleeding') !== false) ? 'checked' : ''; ?>>
+                    <label class="form-check-label" for="bleeding">Bleeding</label>
+                </div>
+                <div class="form-check col-md-3">
+                    <input class="form-check-input" type="checkbox" value="Abdominal Pain" id="Abdominal Pain" name="symptoms[]" <?= (isset($alert_data['symptoms']) && strpos($alert_data['symptoms'], 'abdominal_pain') !== false) ? 'checked' : ''; ?>>
+                    <label class="form-check-label" for="Abdominal Pain">Abdominal Pain</label>
+                </div>
+                <div class="form-check col-md-3">
+                    <input class="form-check-input" type="checkbox" value="Aching Muscles/Joints" id="aching_muscle" name="symptoms[]" <?= (isset($alert_data['symptoms']) && strpos($alert_data['symptoms'], 'Aching Muscles/Joints') !== false) ? 'checked' : ''; ?>>
+                    <label class="form-check-label" for="aching_muscle">Aching Muscles/ Pain</label>
+                </div>
+                <div class="form-check col-md-3">
+                    <input class="form-check-input" type="checkbox" value="Difficulty Swallowing" id="difficult_swallowing" name="symptoms[]" <?= (isset($alert_data['symptoms']) && strpos($alert_data['symptoms'], 'Difficulty Swallowing') !== false) ? 'checked' : ''; ?>>
+                    <label class="form-check-label" for="Difficulty Swallowing">Difficulty Swallowing</label>
+                </div>
+                <div class="form-check col-md-3">
+                    <input class="form-check-input" type="checkbox" value="Difficulty Breathing" id="difficulty_breathing" name="symptoms[]" <?= (isset($alert_data['symptoms']) && strpos($alert_data['symptoms'], 'Difficulty Breathing') !== false) ? 'checked' : ''; ?>>
+                    <label class="form-check-label" for="Difficulty Breathing">Difficulty Breathing</label>
+                </div>
+                <div class="form-check col-md-3">
+                    <input class="form-check-input" type="checkbox" value="Lethergy/Weakness" id="lethergy_weakness" name="symptoms[]" <?= (isset($alert_data['symptoms']) && strpos($alert_data['symptoms'], 'Lethergy/Weakness') !== false) ? 'checked' : ''; ?>>
+                    <label class="form-check-label" for="Lethergy/Weakness">Lethergy/Weakness</label>
+                </div>
+            <!-- </div> -->
+        </div>
            <button type="submit" class="btn btn-primary" name="report">Submit</button>
         </form>
     </div>

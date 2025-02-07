@@ -1,7 +1,7 @@
 <?php
 session_start();
 if (!isset($_SESSION['user_id']) && !isset($_SESSION['affiliation'])) {
-    header("Location: login.php");
+    header("Location: ../index.php");
     exit();
 }
 
@@ -54,6 +54,7 @@ $result = $stmt->get_result();
             <table class="table table-bordered table-hover">
                 <thead class="table-dark">
                     <tr>
+                        <th rowspan="2">Alert ID</th>
                         <th rowspan="2">Name of Person Calling</th>
                         <th rowspan="2">Source of Signal</th>
                         <th rowspan="2">Contact Number of person calling</th>
@@ -81,7 +82,8 @@ $result = $stmt->get_result();
                 <tbody>
                     <?php while ($des = $result->fetch_assoc()): ?>
                     <tr id="row-<?php echo $des['id']; ?>" class="<?php echo ($updated_id == $des['id']) ? 'highlight' : ''; ?>">
-                        <td><?php echo htmlspecialchars($des['call_taker']); ?></td>
+                        <td><?php echo htmlspecialchars($des['alert_case_district'].'-'.$des['id']); ?></td>
+                        <td><?php echo htmlspecialchars($des['person_reporting']); ?></td>
                         <td><?php echo htmlspecialchars($des['source_of_alert']); ?></td>
                         <td><?php echo htmlspecialchars($des['contact_number']); ?></td>
                         <td><?php echo htmlspecialchars($des['alert_reported_before']); ?></td>
