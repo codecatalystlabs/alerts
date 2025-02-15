@@ -2,75 +2,121 @@
 session_start();
 require('../conn.php');
 
-if (!isset($_SESSION['user_id']) || !isset($_SESSION['level'])) {
-    header("Location: login.php");
-    exit();
+// Retrieve the alert id from the URL
+if (!isset($_GET['id'])) {
+    die('No alert id provided');
 }
+$alert_id = $_GET['id'];
 
-// Fetch existing data if an alert ID is provided
-$alert_data = null;
-if (isset($_GET['id'])) {
-    $alert_id = intval($_GET['id']); // Ensure ID is an integer
-    $stmt = $conn->prepare("SELECT * FROM alerts WHERE id = ?");
-    $stmt->bind_param("i", $alert_id);
-    $stmt->execute();
-    $result = $stmt->get_result();
-    $alert_data = $result->fetch_assoc();
-    $stmt->close();
+// Check if a token already exists for this alert_id
+$stmt = $conn->prepare("SELECT token FROM alert_verification_tokens WHERE alert_id = ? LIMIT 1");
+$stmt->bind_param("i", $alert_id);
+$stmt->execute();
+$stmt->store_result();
+
+if ($stmt->num_rows > 0) {
+    // A token already exists, fetch it
+    $stmt->bind_result($token);
+    $stmt->fetch();
+} else {
+    // No token exists, generate a new one
+    require 'functions.php'; // Assuming generateToken() is defined here
+    $token = generateToken();
+    $expires_at = date('Y-m-d H:i:s', strtotime('+20 hours'));
+
+    // Insert the new token into the database
+    $insert_stmt = $conn->prepare("INSERT INTO alert_verification_tokens (alert_id, token, expires_at) VALUES (?, ?, ?)");
+    $insert_stmt->bind_param("iss", $alert_id, $token, $expires_at);
+    $insert_stmt->execute();
+
+    // Optionally, set a session variable or do additional processing
+    $_SESSION['token'] = $token;
 }
+//$alert_id = $row['alert_id'];
 
-// Fetch admin units for dropdown
-$sql2 = "SELECT id, name FROM admin_units";
-$result2 = $conn->query($sql2);
+// Fetch existing alert data
+$stmt = $conn->prepare("SELECT * FROM alerts WHERE id = ?");
+$stmt->bind_param("i", $alert_id);
+$stmt->execute();
+$alert_data = $stmt->get_result()->fetch_assoc();
+$stmt->close();
 
-// If form is submitted, update the alert
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['report'])) {
-    $status = mysqli_real_escape_string($conn, $_POST['status']);
-    $date = mysqli_real_escape_string($conn, $_POST['date']);
-    $time = mysqli_real_escape_string($conn, $_POST['time']);
-    $call_taker = mysqli_real_escape_string($conn, $_POST['call_taker']);
-    $cif_no = mysqli_real_escape_string($conn, strtoupper($_POST['cif_no']));
-    $person_reporting = mysqli_real_escape_string($conn, $_POST['person_reporting']);
-    $village = mysqli_real_escape_string($conn, $_POST['village']);
-    $sub_county = mysqli_real_escape_string($conn, $_POST['sub_county']);
-    $contact_number = mysqli_real_escape_string($conn, $_POST['contact_number']);
-    $source_of_alert = mysqli_real_escape_string($conn, $_POST['source_of_alert']);
-    $alert_case_name = mysqli_real_escape_string($conn, $_POST['alert_case_name']);
-    $alert_case_age = mysqli_real_escape_string($conn, $_POST['alert_case_age']);
-    $alert_case_sex = mysqli_real_escape_string($conn, $_POST['alert_case_sex']);
-    $alert_case_pregnant_duration = mysqli_real_escape_string($conn, $_POST['alert_case_pregnant_duration']) ?? null;
-    $alert_case_village = mysqli_real_escape_string($conn, $_POST['alert_case_village']);
-    $alert_case_parish = mysqli_real_escape_string($conn, $_POST['alert_case_parish']);
-    $alert_case_sub_county = mysqli_real_escape_string($conn, $_POST['alert_case_sub_county']);
-    $alert_case_district = mysqli_real_escape_string($conn, $_POST['alert_case_district']);
-    $alert_case_nationality = mysqli_real_escape_string($conn, $_POST['alert_case_nationality']);
-    $point_of_contact_name = mysqli_real_escape_string($conn, $_POST['point_of_contact_name']);
-    $point_of_contact_relationship = mysqli_real_escape_string($conn, $_POST['point_of_contact_relationship']);
-    $point_of_contact_phone = mysqli_real_escape_string($conn, $_POST['point_of_contact_phone']);
-    $history = isset($_POST['history']) ? implode(", ", array_map(fn($value) => mysqli_real_escape_string($conn, $value), $_POST['history'])) : null;
-    $health_facility_visit = mysqli_real_escape_string($conn, $_POST['health_facility_visit']);
-    $traditional_healer_visit = mysqli_real_escape_string($conn, $_POST['traditional_healer_visit']);
-    $symptoms = isset($_POST['symptoms']) ? implode(", ", array_map(fn($symptom) => mysqli_real_escape_string($conn, $symptom), $_POST['symptoms'])) : null;
-    $actions = isset($_POST['actions']) ? implode(", ", array_map(fn($action) => mysqli_real_escape_string($conn, $action), $_POST['actions'])) : null;
-    //$actions = mysqli_real_escape_string($conn, $_POST['actions']);
+    // Sanitize inputs
+    $inputs = [
+        'status', 'verification_date', 'verification_time', 'cif_no', 'person_reporting',
+        'village', 'sub_county', 'contact_number', 'source_of_alert', 'alert_case_name',
+        'alert_case_age', 'alert_case_sex', 'alert_case_pregnant_duration', 'alert_case_village',
+        'alert_case_parish', 'alert_case_sub_county', 'alert_case_district', 'alert_case_nationality',
+        'point_of_contact_name', 'point_of_contact_relationship', 'point_of_contact_phone',
+        'health_facility_visit', 'traditional_healer_visit'
+    ];
 
-    $update_sql = "UPDATE alerts SET status=?, date=?, time=?, call_taker=?, cif_no=?, person_reporting=?, village=?, sub_county=?, contact_number=?, source_of_alert=?, alert_case_name=?, alert_case_age=?, alert_case_sex=?, alert_case_pregnant_duration=?, alert_case_village=?, alert_case_parish=?, alert_case_sub_county=?, alert_case_district=?, alert_case_nationality=?, point_of_contact_name=?, point_of_contact_relationship=?, point_of_contact_phone=?, history=?, health_facility_visit=?, traditional_healer_visit=?, symptoms=?, actions=? WHERE id=?";
+    $data = [];
+    foreach ($inputs as $input) {
+        $data[$input] = isset($_POST[$input]) ? mysqli_real_escape_string($conn, $_POST[$input]) : null;
+    }
+
+    $data['cif_no'] = strtoupper($data['cif_no']);
+    $data['history'] = isset($_POST['history']) ? implode(", ", array_map(fn($val) => mysqli_real_escape_string($conn, $val), $_POST['history'])) : null;
+    $data['symptoms'] = isset($_POST['symptoms']) ? implode(", ", array_map(fn($val) => mysqli_real_escape_string($conn, $val), $_POST['symptoms'])) : null;
+    $data['actions'] = isset($_POST['actions']) ? implode(", ", array_map(fn($val) => mysqli_real_escape_string($conn, $val), $_POST['actions'])) : null;
+
+    // Update alert
+    $update_sql = "UPDATE alerts SET status=?, verification_date=?, verification_time=?, cif_no=?, person_reporting=?, village=?, sub_county=?, contact_number=?, source_of_alert=?, alert_case_name=?, alert_case_age=?, alert_case_sex=?, alert_case_pregnant_duration=?, alert_case_village=?, alert_case_parish=?, alert_case_sub_county=?, alert_case_district=?, alert_case_nationality=?, point_of_contact_name=?, point_of_contact_relationship=?, point_of_contact_phone=?, history=?, health_facility_visit=?, traditional_healer_visit=?, symptoms=?, actions=? WHERE id=?";
     
     $stmt = $conn->prepare($update_sql);
-    $stmt->bind_param("sssssssssssisisssssssssssssi", $status, $date, $time, $call_taker, $cif_no, $person_reporting, $village, $sub_county, $contact_number, $source_of_alert, $alert_case_name, $alert_case_age, $alert_case_sex, $alert_case_pregnant_duration, $alert_case_village, $alert_case_parish, $alert_case_sub_county, $alert_case_district, $alert_case_nationality, $point_of_contact_name, $point_of_contact_relationship, $point_of_contact_phone, $history, $health_facility_visit, $traditional_healer_visit, $symptoms, $actions, $alert_id);
+    $data_values = array_values($data);
+    $data_values[] = $alert_id; // Append $alert_id to the array
+    $stmt->bind_param("ssssssssssisisssssssssssssi", ...$data_values);
 
+    
     if ($stmt->execute()) {
+        // Mark the token as used
+        $stmt = $conn->prepare("UPDATE alert_verification_tokens SET used = 1 WHERE token = ?");
+        $stmt->bind_param("s", $token);
+        $stmt->execute();
+
         echo "Alert updated successfully!";
-        header("Location: alert_verification.php?id=$alert_id"); // Redirect to avoid resubmission
+        
+        
+        // Notify EMS if action includes "EMS"
+        if (strpos($data['actions'], 'EMS') !== false) {
+            $stmt = $conn->prepare("SELECT contact_number, person_reporting FROM alerts WHERE id = ?");
+            $stmt->bind_param("i", $alert_id);
+            $stmt->execute();
+            $details = $stmt->get_result()->fetch_assoc();
+            $stmt->close();
+
+            $stmt = $conn->prepare("SELECT email, gname, surname, oname FROM users WHERE affiliation = 'EMS' OR affiliation = 'MoH Call Centre'");
+            $stmt->execute();
+            $users = $stmt->get_result();
+            
+            while ($person = $users->fetch_assoc()) {
+                $to = $person['email'];
+                $subject = "Action needed for alert #$alert_id";
+                $message = "Dear EMS Team, after verification, alert #$alert_id needs your attention. Please contact {$details['person_reporting']} at {$details['contact_number']} for more details.";
+                $headers = "From: no-reply@alerts.health.go.ug";
+                
+                if (mail($to, $subject, $message, $headers)) {
+                    echo "Mail sent to the respective responders.";
+                }
+            }
+        }
+        
+                                                            
+        header("Location: alert_verification.php?id=$alert_id");
         exit();
     } else {
         echo "Error updating alert: " . $stmt->error;
     }
-
+    
     $stmt->close();
 }
 $conn->close();
 ?>
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -80,10 +126,12 @@ $conn->close();
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <!-- Add this to include Select2 CSS -->
 <link href="https://cdn.jsdelivr.net/npm/select2@4.0.13/dist/css/select2.min.css" rel="stylesheet" />
+<!-- Only include one version of jQuery -->
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
 
 <!-- Add this to include Select2 JS -->
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/select2@4.0.13/dist/js/select2.min.js"></script>
+<!-- <script src="https://cdn.jsdelivr.net/npm/select2@4.0.13/dist/js/select2.min.js"></script> -->
 
     <link href="../style/style.css" rel="stylesheet">
 </head>
@@ -93,59 +141,40 @@ $conn->close();
         <?php include("../includes/side-pane.php"); ?>
     </div>
     <div class="entry-screen mt-1">
-        <h2 class="text-center mb-4">Alert Verification Form</h2>
-        <form action="" method="POST">
+        <h2 class="text-center mb-2">Alert Verification Form</h2>
+        <form action="" method="POST" action="">
+            <input type="hidden" name="alert_id" value="<?php echo $alert['id']; ?>">
             <div class="mb-2">
                 
             </div>
             <div class="row">
-            <div class="col-md-4 mb-3">
+            <div class="col-md-3 mb-3">
             <label for="status" class="form-label">Status</label>
                 <select class="form-select" id="status" name="status">
                     <option value="Alive">Alive</option>
                     <option value="Dead">Dead</option>
                 </select>
                 </div>
-                <div class="col-md-4 mb-3">
-                    <label for="date" class="form-label">Date</label>
-                    <input type="date" class="form-control" id="date" name="date" value="<?= isset($alert_data['date']) ? htmlspecialchars($alert_data['date']) : ''; ?>" disabled>
+                <div class="col-md-3 mb-3">
+                    <label for="date" class="form-label">Verification Date</label>
+                    <input type="date" class="form-control" id="verification_date" name="verification_date" value="<?= isset($alert_data['verification_date']) ? htmlspecialchars($alert_data['verification_date']) : ''; ?>" required>
                 </div>
-                <div class="col-md-4 mb-3">
-                    <label for="time" class="form-label">Time</label>
-                    <input type="time" class="form-control" id="time" name="time" value="<?= isset($alert_data['time']) ? htmlspecialchars($alert_data['time']) : ''; ?>" disabled>
+                <div class="col-md-3 mb-3">
+                    <label for="verification_time" class="form-label">Verification Time</label>
+                    <input type="time" class="form-control" id="verification_time" name="verification_time" value="<?= isset($alert_data['verification_time']) ? htmlspecialchars($alert_data['verification_time']) : ''; ?>" required>
                 </div>
-            </div>
-            <div class="row">
-                <div class="col-md-4 mb-3">
-                    <label for="call_taker" class="form-label">Call Taker</label>
-                    <input type="text" class="form-control" id="call_taker" name="call_taker" value="<?= isset($alert_data['call_taker']) ? htmlspecialchars($alert_data['call_taker']) : ''; ?>" disabled>
-                </div>
-                <div class="col-md-4 mb-3">
+                <div class="col-md-3 mb-3">
                     <label for="cif_no" class="form-label">CIF No</label>
                     <input type="text" class="form-control" id="cif_no" name="cif_no" value="<?= isset($alert_data['cif_no']) ? htmlspecialchars($alert_data['cif_no']) : ''; ?>">
                 </div>
-                <div class="col-md-4 mb-3">
-                <label for="person_reporting" class="form-label">Person Reporting Alert</label>
+            </div>
+            <hr>
+            <div class="row">
+                <div class="col-md-3 mb-3">
+                <label for="person_reporting" class="form-label">Who reported the Alert</label>
                 <input type="text" class="form-control" id="person_reporting" name="person_reporting" value="<?= isset($alert_data['person_reporting']) ? htmlspecialchars($alert_data['person_reporting']) : ''; ?>" disabled>
                 </div>
-            </div>
-            
-            <div class="row">
-                <div class="col-md-4 mb-3">
-                    <label for="village" class="form-label">Village</label>
-                    <input type="text" class="form-control" id="village" name="village" value="<?= isset($alert_data['village']) ? htmlspecialchars($alert_data['village']) : ''; ?>">
-                </div>
-                <div class="col-md-4 mb-3">
-                    <label for="sub_county" class="form-label">Sub-county</label>
-                    <input type="text" class="form-control" id="sub_county" name="sub_county" value="<?= isset($alert_data['sub_county']) ? htmlspecialchars($alert_data['sub_county']) : ''; ?>">
-                </div>
-                <div class="col-md-4 mb-3">
-                    <label for="contact_number" class="form-label">Contact Number</label>
-                    <input type="tel" class="form-control" id="contact_number" name="contact_number" value="<?= isset($alert_data['contact_number']) ? htmlspecialchars($alert_data['contact_number']) : ''; ?>">
-                </div>
-            </div>
-            <div class="row">
-                <div class="col-md-4 mb-3">
+                <div class="col-md-3 mb-3">
                 <label for="source_of_alert" class="form-label">Source of Alert</label>
                 <select class="form-select" id="source_of_alert" name="source_of_alert">
                     <option value="Community">Community</option>
@@ -156,14 +185,24 @@ $conn->close();
                     <option value="SMS Alert">SMS Alert</option>
                 </select>
             </div>
-            <div class="col-md-4 mb-3">
+                <div class="col-md-3 mb-3">
+                    <label for="alert_case_village" class="form-label">Village/Institution Name</label>
+                    <input type="text" class="form-control" id="alert_case_village" name="alert_case_village" value="<?= isset($alert_data['alert_case_village']) ? htmlspecialchars($alert_data['alert_case_village']) : ''; ?>">
+                </div>
+                <div class="col-md-3 mb-3">
+                    <label for="contact_number" class="form-label">Contact Number</label>
+                    <input type="tel" class="form-control" id="contact_number" name="contact_number" value="<?= isset($alert_data['contact_number']) ? htmlspecialchars($alert_data['contact_number']) : ''; ?>">
+                </div>
+            </div>
+            <hr>
+            <div class="row">
+                
+                
+                <div class="col-md-3 mb-3">
                 <label for="alert_case_name" class="form-label">Name</label>
                 <input type="text" class="form-control" id="alert_case_name" name="alert_case_name" value="<?= isset($alert_data['alert_case_name']) ? htmlspecialchars($alert_data['alert_case_name']) : ''; ?>">
             </div>
-            
-        </div>
-            <div class="row">
-                <div class="col-md-3 mb-3">
+            <div class="col-md-3 mb-3">
                     <label for="alert_case_age" class="form-label">Age</label>
                     <input type="number" class="form-control" id="alert_case_age" name="alert_case_age" value="<?= isset($alert_data['alert_case_age']) ? htmlspecialchars($alert_data['alert_case_age']) : ''; ?>">
                 </div>
@@ -178,30 +217,49 @@ $conn->close();
                     <label for="alert_case_pregnant_duration" class="form-label">Pregnant Duration</label>
                     <input type="number" class="form-control" id="alert_case_pregnant_duration" name="alert_case_pregnant_duration" placeholder="(In Months)" value="<?= isset($alert_data['alert_case_pregnant_duration']) ? htmlspecialchars($alert_data['alert_case_pregnant_duration']) : ''; ?>">
                 </div>
-                <div class="col-md-3 mb-3">
-                    <label for="alert_case_village" class="form-label">Village/Institution Name</label>
-                    <input type="text" class="form-control" id="alert_case_village" name="alert_case_village" value="<?= isset($alert_data['alert_case_village']) ? htmlspecialchars($alert_data['alert_case_village']) : ''; ?>">
-                </div>
             </div>
             <div class="row">
-                <div class="col-md-4 mb-3">
+                
+            <hr>
+                
+        </div>
+            <div class="row"> 
+                <div class="col-md-3 mb-3">
+                    <label for="region">Region:</label>
+                    <select id="region" name="region" class="form-control">
+                        <option value="">-- Select Region --</option>
+                        <?php 
+                        // Fetch all regions for dropdown
+                        $regions = $conn->query("SELECT id, region FROM regions");
+                        while ($row = $regions->fetch_assoc()): ?>
+                            <option value="<?= htmlspecialchars($row['id']) ?>">
+                                <?= htmlspecialchars($row['region']) ?>
+                            </option>
+                        <?php endwhile; ?>
+                    </select>
+                </div>
+
+                <div class="col-md-3 mb-3">
+                <label for="district">District:</label>
+                    <select id="district" name="district" class="form-control">
+                        <option value="">-- Select District --</option>
+                    </select>
+                </div>
+                <div class="col-md-3 mb-3">
+                    <label for="subcounty">Subcounty:</label>
+                    <select id="subcounty" name="subcounty" class="form-control">
+                        <option value="">-- Select Subcounty --</option>
+                    </select>
+                </div>
+                <div class="col-md-3 mb-3">
                     <label for="alert_case_parish" class="form-label">Parish</label>
                     <input type="text" class="form-control" id="alert_case_parish" name="alert_case_parish" value="<?= isset($alert_data['alert_case_parish']) ? htmlspecialchars($alert_data['alert_case_parish']) : ''; ?>">
                 </div>
-                <div class="col-md-4 mb-3">
-                <label for="alert_case_district" class="form-label">District</label>
-                    <select class="form-select" id="alert_case_district" name="alert_case_district">
-                        <option value="">-- Select District --</option>
-                        <?php while ($row = $result2->fetch_assoc()): ?>
-                            <option value="<?= htmlspecialchars($row['id']); ?>">
-                                <?= htmlspecialchars($row['name']); ?>
-                            </option>
-                        <?php endwhile; ?>
-                    </select>  
-                    </div> 
             </div>
+            <hr>
             <div class="row">
-            <div class="col-md-3 mb-3">
+                
+                  <div class="col-md-3 mb-3">
                     <label for="nationality" class="form-label">Nationality</label>
                     <select class="form-select" id="nationality" name="alert_case_nationality">
                         <option value="">Select Nationality</option>
@@ -223,143 +281,155 @@ $conn->close();
                     <input type="tel" class="form-control" id="point_of_contact_phone" name="point_of_contact_phone" value="<?= isset($alert_data['point_of_contact_phone']) ? htmlspecialchars($alert_data['point_of_contact_phone']) : ''; ?>">
                 </div>
             </div>
+            <hr>
             <div class="mb-3">
-                <label for="history" class="form-label">History (Last 21 Days)</label>
-                <div class="form-check">
+                <label for="history" class="form-label"><strong>History (Last 21 Days)</strong></label></br>
+                <div class="form-check form-check-inline">
                     <input class="form-check-input" type="checkbox" value="Other mass gathering" id="mass_gathering" name="history[]" <?= (isset($alert_data['history']) && strpos($alert_data['history'], 'Other mass gathering') !== false) ? 'checked' : ''; ?>>
                     <label class="form-check-label" for="mass_gathering">Other mass gathering</label>
                 </div>
-                <div class="form-check">
+                <div class="form-check form-check-inline">
                     <input class="form-check-input" type="checkbox" value="Contact of suspect/probable/confirmed case" id="contact_case" name="history[]" <?= (isset($alert_data['history']) && strpos($alert_data['history'], 'Contact of suspect/probable/confirmed case') !== false) ? 'checked' : ''; ?>>
                     <label class="form-check-label" for="contact_case">Contact of suspect/probable/confirmed case</label>
                 </div>
-                <div class="form-check">
+                <div class="form-check form-check-inline">
                     <input class="form-check-input" type="checkbox" value="Contact of sudden/unexplained death" id="unexplained_death" name="history[]" <?= (isset($alert_data['history']) && strpos($alert_data['history'], 'Contact of sudden/unexplained death') !== false) ? 'checked' : ''; ?>>
                     <label class="form-check-label" for="unexplained_death">Contact of sudden/unexplained death</label>
                 </div>
             </div>
-            <div class="mb-3">
+            <div class="row">
+            <div class=" col-md-6 mb-3">
                 <label for="health_facility_visit" class="form-label">Visited Health Facility</label>
-                <textarea class="form-control" id="health_facility_visit" name="health_facility_visit" rows="2" placeholder="Include date, facility name, and contact/location."></textarea>
+                <input class="form-control" id="health_facility_visit" name="health_facility_visit" rows="2" placeholder="Include date, facility name, and contact/location."></textarea>
             </div>
-            <div class="mb-3">
+            <div class=" col-md-6 mb-3">
                 <label for="traditional_healer_visit" class="form-label">Visited Traditional Healer</label>
-                <textarea class="form-control" id="traditional_healer_visit" name="traditional_healer_visit" rows="2" placeholder="Include date, healer name, and contact/location."></textarea>
+                <input class="form-control" id="traditional_healer_visit" name="traditional_healer_visit" rows="2" placeholder="Include date, healer name, and contact/location."></textarea>
             </div>
+        </div>
+            <hr>
             <div class="mb-3">
-                <label for="symptoms" class="form-label">Signs and Symptoms</label>
-                <div class="form-check">
+                <label for="symptoms" class="form-label"><strong>Signs and Symptoms</strong></label></br>
+                
+                <div class="form-check form-check-inline">
                     <input class="form-check-input" type="checkbox" value="Fever" id="fever" name="symptoms[]" <?= (isset($alert_data['symptoms']) && strpos($alert_data['symptoms'], 'Fever') !== false) ? 'checked' : ''; ?>>
                     <label class="form-check-label" for="fever">Fever (&ge;38&deg;C)</label>
                 </div>
-                <div class="form-check">
+                <div class="form-check form-check-inline">
                     <input class="form-check-input" type="checkbox" value="Headache" id="headache" name="symptoms[]" <?= (isset($alert_data['symptoms']) && strpos($alert_data['symptoms'], 'Headache') !== false) ? 'checked' : ''; ?>>
                     <label class="form-check-label" for="headache">Headache</label>
                 </div>
-                <div class="form-check">
+                <div class="form-check form-check-inline">
                     <input class="form-check-input" type="checkbox" value="General Weakness" id="weakness" name="symptoms[]" <?= (isset($alert_data['symptoms']) && strpos($alert_data['symptoms'], 'General Weakness') !== false) ? 'checked' : ''; ?>>
                     <label class="form-check-label" for="weakness">General Weakness</label>
                 </div>
-                <div class="form-check">
+                <div class="form-check form-check-inline">
                     <input class="form-check-input" type="checkbox" value="Rash" id="rash" name="symptoms[]" <?= (isset($alert_data['symptoms']) && strpos($alert_data['symptoms'], 'rash') !== false) ? 'checked' : ''; ?>>
                     <label class="form-check-label" for="rash">Skin/Body Rash</label>
                 </div>
-                <div class="form-check">
+                <div class="form-check form-check-inline">
                     <input class="form-check-input" type="checkbox" value="Sore Throat" id="sore_throat" name="symptoms[]" <?= (isset($alert_data['symptoms']) && strpos($alert_data['symptoms'], 'Sore Throat') !== false) ? 'checked' : ''; ?>>
                     <label class="form-check-label" for="sore_throat">Sore Throat</label>
                 </div>
-                <div class="form-check col-md-3">
+                <div class="form-check form-check-inline">
                     <input class="form-check-input" type="checkbox" value="vomiting" id="vomiting" name="symptoms[]" <?= (isset($alert_data['symptoms']) && strpos($alert_data['symptoms'], 'vomiting') !== false) ? 'checked' : ''; ?>>
                     <label class="form-check-label" for="vomiting">Vomiting</label>
                 </div>
-                <div class="form-check col-md-3">
+                <div class="form-check form-check-inline">
                     <input class="form-check-input" type="checkbox" value="bleeding" id="bleeding" name="symptoms[]" <?= (isset($alert_data['symptoms']) && strpos($alert_data['symptoms'], 'bleeding') !== false) ? 'checked' : ''; ?>>
                     <label class="form-check-label" for="bleeding">Bleeding</label>
                 </div>
-                <div class="form-check col-md-3">
+                <div class="form-check form-check-inline">
                     <input class="form-check-input" type="checkbox" value="Abdominal Pain" id="Abdominal Pain" name="symptoms[]" <?= (isset($alert_data['symptoms']) && strpos($alert_data['symptoms'], 'abdominal_pain') !== false) ? 'checked' : ''; ?>>
                     <label class="form-check-label" for="Abdominal Pain">Abdominal Pain</label>
                 </div>
-                <div class="form-check col-md-3">
+                <div class="form-check form-check-inline">
                     <input class="form-check-input" type="checkbox" value="Aching Muscles/Joints" id="aching_muscle" name="symptoms[]" <?= (isset($alert_data['symptoms']) && strpos($alert_data['symptoms'], 'Aching Muscles/Joints') !== false) ? 'checked' : ''; ?>>
                     <label class="form-check-label" for="aching_muscle">Aching Muscles/ Pain</label>
                 </div>
-                <div class="form-check col-md-3">
+                <div class="form-check form-check-inline">
                     <input class="form-check-input" type="checkbox" value="Difficulty Swallowing" id="difficult_swallowing" name="symptoms[]" <?= (isset($alert_data['symptoms']) && strpos($alert_data['symptoms'], 'Difficulty Swallowing') !== false) ? 'checked' : ''; ?>>
                     <label class="form-check-label" for="Difficulty Swallowing">Difficulty Swallowing</label>
                 </div>
-                <div class="form-check col-md-3">
+                <div class="form-check form-check-inline">
                     <input class="form-check-input" type="checkbox" value="Difficulty Breathing" id="difficulty_breathing" name="symptoms[]" <?= (isset($alert_data['symptoms']) && strpos($alert_data['symptoms'], 'Difficulty Breathing') !== false) ? 'checked' : ''; ?>>
                     <label class="form-check-label" for="Difficulty Breathing">Difficulty Breathing</label>
                 </div>
-                <div class="form-check col-md-3">
+                <div class="form-check form-check-inline">
                     <input class="form-check-input" type="checkbox" value="Lethergy/Weakness" id="lethergy_weakness" name="symptoms[]" <?= (isset($alert_data['symptoms']) && strpos($alert_data['symptoms'], 'Lethergy/Weakness') !== false) ? 'checked' : ''; ?>>
                     <label class="form-check-label" for="Lethergy/Weakness">Lethergy/Weakness</label>
                 </div>
             </div>
+       
+            <hr>
             <div class="mb-3">
-                <label for="actions" class="form-label">Actions</label>
-                <div class="form-check">
+                <label for="actions" class="form-label"><strong>Actions</strong></label></br>
+                
+                <div class="form-check form-check-inline">
                     <input class="form-check-input" type="checkbox" value="Case Verification Desk" id="fever" name="actions[]" <?= (isset($alert_data['actions']) && strpos($alert_data['actions'], 'Case Verification Desk') !== false) ? 'checked' : ''; ?>>
                     <label class="form-check-label" for="Case Verification Desk">Case Verification Desk</label>
                 </div>
-                <div class="form-check">
+                <div class="form-check form-check-inline">
                     <input class="form-check-input" type="checkbox" value="Discarded" id="fever" name="actions[]" <?= (isset($alert_data['actions']) && strpos($alert_data['actions'], 'Discarded') !== false) ? 'checked' : ''; ?>>
                     <label class="form-check-label" for="Discarded">Discarded</label>
                 </div>
-                <div class="form-check">
+                <div class="form-check form-check-inline">
                     <input class="form-check-input" type="checkbox" value="Validated for EMS Evacuation" id="Validated for EMS Evacuation" name="actions[]" <?= (isset($alert_data['actions']) && strpos($alert_data['actions'], 'Validated for EMS Evacuation') !== false) ? 'checked' : ''; ?>>
                     <label class="form-check-label" for="Validated for EMS Evacuation">Validated for EMS Evacuation</label>
                 </div>
-                <div class="form-check">
-                    <input class="form-check-input" type="checkbox" value="Safe Dignified Burial team" id="Safe Dignified Burial team" name="actions[]" <?= (isset($alert_data['actions']) && strpos($alert_data['actions'], '') !== false) ? 'checked' : 'Safe Dignified Burial team'; ?>>
+                <div class="form-check form-check-inline">
+                    <input class="form-check-input" type="checkbox" value="Safe Dignified Burial team" id="Safe Dignified Burial team" name="actions[]" <?= (isset($alert_data['actions']) && strpos($alert_data['actions'], '') !== false) ? 'checked' : ''; ?>>
                     <label class="form-check-label" for="Safe Dignified Burial team">Safe Dignified Burial team</label>
                 </div>
-                <div class="form-check">
+                <div class="form-check form-check-inline">
                     <input class="form-check-input" type="checkbox" value="For Field Verification" id="For Field Verification" name="actions[]" <?= (isset($alert_data['actions']) && strpos($alert_data['actions'], 'For Field Verification') !== false) ? 'checked' : 'For Field Verification'; ?>>
                     <label class="form-check-label" for="For Field Verification">For Field Verification</label>
                 </div>
-                <div class="form-check">
+                <div class="form-check form-check-inline">
                     <input class="form-check-input" type="checkbox" value="Call to verify and follow-up in 24hrs" id="Call to verify and follow-up in 24hrs" name="actions[]" <?= (isset($alert_data['actions']) && strpos($alert_data['actions'], 'Call to verify and follow-up in 24hrs') !== false) ? 'checked' : ''; ?>>
                     <label class="form-check-label" for="Call to verify and follow-up in 24hrs">Call to verify and follow-up in 24hrs</label>
                 </div>
-                <div class="form-check">
+                <div class="form-check form-check-inline">
                     <input class="form-check-input" type="checkbox" value="" id="For review" name="actions[]" <?= (isset($alert_data['actions']) && strpos($alert_data['actions'], 'For review') !== false) ? 'checked' : ''; ?>>
                     <label class="form-check-label" for="For review">For review</label>
                 </div>
-                <div class="form-check">
+                <div class="form-check form-check-inline">
                     <input class="form-check-input" type="checkbox" value="Epi link" id="Epi link" name="actions[]" <?= (isset($alert_data['actions']) && strpos($alert_data['actions'], 'Epi link') !== false) ? 'checked' : ''; ?>>
                     <label class="form-check-label" for="Epi link">Epi link</label>
                 </div>
-                <div class="form-check">
+                <div class="form-check form-check-inline">
                     <input class="form-check-input" type="checkbox" value="Samples Picked" id="Samples Picked" name="actions[]" <?= (isset($alert_data['actions']) && strpos($alert_data['actions'], 'Samples Picked') !== false) ? 'checked' : ''; ?>>
                     <label class="form-check-label" for="Samples Picked">Samples Picked</label>
                 </div>
-                <div class="form-check">
+                <div class="form-check form-check-inline">
                     <input class="form-check-input" type="checkbox" value="In Isolation" id="Isolated" name="actions[]" <?= (isset($alert_data['actions']) && strpos($alert_data['actions'], 'In Isolation') !== false) ? 'checked' : ''; ?>>
                     <label class="form-check-label" for="In Isolated">In Isolation</label>
                 </div>
-                <div class="form-check">
+                <div class="form-check form-check-inline">
                     <input class="form-check-input" type="checkbox" value="In Quarantine" id="In_Quarantine" name="actions[]" <?= (isset($alert_data['actions']) && strpos($alert_data['actions'], 'In Quarantine') !== false) ? 'checked' : ''; ?>>
                     <label class="form-check-label" for="In_Quarantine">In Quarantine</label>
                 </div>
-                <div class="form-check">
+                <div class="form-check form-check-inline">
                     <input class="form-check-input" type="checkbox" value="Pending Lab Results" id="Pending_Lab_Results" name="actions[]" <?= (isset($alert_data['actions']) && strpos($alert_data['actions'], 'Pending Lab Results') !== false) ? 'checked' : ''; ?>>
                     <label class="form-check-label" for="Pending Lab Results">Pending Lab Results</label>
                 </div>
-                <div class="form-check">
+                <div class="form-check form-check-inline">
                     <input class="form-check-input" type="checkbox" value="Pending EMS Pickup" id="Pending_EMS_Pickup" name="actions[]" <?= (isset($alert_data['actions']) && strpos($alert_data['actions'], 'Pending EMS Pickup') !== false) ? 'checked' : ''; ?>>
                     <label class="form-check-label" for="Pending_EMS_Pickup">Pending EMS Pickup</label>
                 </div>
-                <div class="form-check">
+                <div class="form-check form-check-inline">
                     <input class="form-check-input" type="checkbox" value="Forwarded to EMS" id="Forwarded_to_EMS" name="actions[]" <?= (isset($alert_data['actions']) && strpos($alert_data['actions'], 'Forwarded to EMS') !== false) ? 'checked' : ''; ?>>
                     <label class="form-check-label" for="Forwarded to EMS">Forwarded to EMS</label>
                 </div>
             </div>
+       
             <button type="submit" class="btn btn-primary" name="report">Submit</button>
         </form>
     </div>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script>
+        
     function refreshSidePane() {
         var xhr = new XMLHttpRequest();
         xhr.onreadystatechange = function() {
@@ -403,25 +473,54 @@ $conn->close();
         // Call function on page load to apply rules if fields are prefilled
         togglePregnancyField();
     });
-    $(document).ready(function() {
-    // Initialize select2 for search functionality
-    $('#alert_case_district').select2({
-        placeholder: "Search for a district...",
-        allowClear: true,  // Allow clearing the selection
-        ajax: {
-            url: '../users/fetch_affiliations.php',  // Endpoint to fetch data dynamically
+
+    $(document).ready(function(){
+    // When a region is selected, load districts
+    $('#region').change(function(){
+        var regionId = $(this).val();
+        console.log('Region selected:', regionId);
+        $.ajax({
+            url: 'getDistrict.php',
+            type: 'POST',
+            data: { region: regionId },
             dataType: 'json',
-            delay: 250,  // Delay to avoid too many requests on each keystroke
-            processResults: function(data) {
-                return {
-                    results: data  // Process the result and return it
-                };
+            success: function(response) {
+                console.log('District response:', response);
+                $("#district").empty().append("<option value=''>-- Select District --</option>");
+                $("#subcounty").empty().append("<option value=''>-- Select Subcounty --</option>");
+                $.each(response, function(index, district) {
+                    $("#district").append("<option value='" + district.id + "'>" + district.district + "</option>");
+                });
             },
-            cache: true
-        },
-        minimumInputLength: 3  // Minimum input length before search is triggered
+            error: function(jqXHR, textStatus, errorThrown) {
+                console.error('Error loading districts:', textStatus, errorThrown);
+            }
+        });
+    });
+
+    // When a district is selected, load subcounties
+    $('#district').change(function(){
+        var districtId = $(this).val();
+        console.log('District selected:', districtId);
+        $.ajax({
+            url: 'getSubcounties.php',
+            type: 'POST',
+            data: { district: districtId },
+            dataType: 'json',
+            success: function(response) {
+                console.log('Subcounty response:', response);
+                $("#subcounty").empty().append("<option value=''>-- Select Subcounty --</option>");
+                $.each(response, function(index, subcounty) {
+                    $("#subcounty").append("<option value='" + subcounty.id + "'>" + subcounty.subcounty + "</option>");
+                });
+            },
+            error: function(jqXHR, textStatus, errorThrown) {
+                console.error('Error loading subcounties:', textStatus, errorThrown);
+            }
+        });
     });
 });
+
 </script>
 
 </body>

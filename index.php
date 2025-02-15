@@ -2,7 +2,7 @@
 require('conn.php');
 
 // Fetch admin units
-$sql2 = "SELECT id, name FROM admin_units";
+$sql2 = "SELECT id, district FROM districts";
 $result2 = $conn->query($sql2);
 
 // Handle form submission
@@ -23,6 +23,7 @@ if (isset($_POST['report'])) {
     $point_of_contact_phone = mysqli_real_escape_string($conn, $_POST['point_of_contact_phone']);
     $alert_case_district = mysqli_real_escape_string($conn, $_POST['alert_case_district']);
     $alert_from = 'Community Alerts';
+    //$created_at = date(now());
     $symptoms = isset($_POST['symptoms']) ? implode(", ", array_map(fn($symptom) => mysqli_real_escape_string($conn, $symptom), $_POST['symptoms'])) : null;
 
     // Insert data
@@ -114,11 +115,11 @@ if (isset($_POST['report'])) {
                 
                 <div class="col-md-3 mb-3">
                     <label for="alert_case_district" class="form-label">District</label>
-                        <select class="form-select" id="alert_case_district" name="alert_case_district">
+                        <select class="form-select" id="alert_case_districts" name="alert_case_district">
                             <option value="">-- Select District --</option>
                             <?php while ($row = $result2->fetch_assoc()): ?>
-                                <option value="<?= htmlspecialchars($row['name']); ?>">
-                                    <?= htmlspecialchars($row['name']); ?>
+                                <option value="<?= htmlspecialchars($row['district']) ?>">
+                                    <?= htmlspecialchars($row['district']) ?>
                                 </option>
                             <?php endwhile; ?>
                         </select>                               
@@ -257,7 +258,7 @@ if (isset($_POST['report'])) {
         placeholder: "Search for a district...",
         allowClear: true,  // Allow clearing the selection
         ajax: {
-            url: 'users/fetch_affiliations.php',  // Endpoint to fetch data dynamically
+            url: 'manage/getDistrict.php',  // Endpoint to fetch data dynamically
             dataType: 'json',
             delay: 250,  // Delay to avoid too many requests on each keystroke
             processResults: function(data) {
@@ -270,6 +271,36 @@ if (isset($_POST['report'])) {
         minimumInputLength: 1 // Minimum input length before search is triggered
     });
 });
+    document.addEventListener("DOMContentLoaded", function () {
+        let timeInput = document.getElementById("time");
+
+        function convertTo12HourFormat(hours, minutes) {
+            let period = "AM";
+            if (hours >= 12) {
+                period = "PM";
+                if (hours > 12) {
+                    hours -= 12;
+                }
+            }
+            if (hours === 0) {
+                hours = 12;
+            }
+            return `${String(hours).padStart(2, "0")}:${String(minutes).padStart(2, "0")} ${period}`;
+        }
+
+        function setMaxTime() {
+            let now = new Date();
+            let hours = now.getHours();
+            let minutes = now.getMinutes();
+            let currentTime = convertTo12HourFormat(hours, minutes);
+
+            // Set the 'max' attribute as a 12-hour formatted time
+            timeInput.setAttribute("max", currentTime);
+        }
+
+        setMaxTime();
+        setInterval(setMaxTime, 60000);
+    });
 </script>
 
 </body>

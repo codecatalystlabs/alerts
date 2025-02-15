@@ -82,6 +82,7 @@ $result = $stmt->get_result();
                         <th>Health Facility Visit</th>
                         <th>Traditional Healer Visit</th>
                         <th>Symptoms</th>
+                        <th>Action Taken</th>
                         <th>Actions</th>
                     </tr>
                 </thead>
@@ -116,6 +117,7 @@ $result = $stmt->get_result();
                         <td><?php echo htmlspecialchars($des['health_facility_visit']); ?></td>
                         <td><?php echo htmlspecialchars($des['traditional_healer_visit']); ?></td>
                         <td><?php echo htmlspecialchars($des['symptoms']); ?></td>
+                        <td><?php echo htmlspecialchars($des['actions']); ?></td>
                         <td>
                             <a class="btn btn-primary btn-sm" href="alert_verification.php?id=<?php echo $des['id']; ?>">Edit</a>
                         </td>

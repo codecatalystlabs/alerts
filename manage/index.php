@@ -7,9 +7,9 @@ if (!isset($_SESSION['user_id']) || !isset($_SESSION['level'])) {
     header("Location: login.php");
     exit();
 }
-
+$username = $_SESSION['username'];
 // Query to fetch admin units (if needed for your form)
-$sql2 = "SELECT id, name FROM admin_units"; // Adjust column names as per your DB
+$sql2 = "SELECT id, district FROM districts"; // Adjust column names as per your DB
 $result2 = $conn->query($sql2);
 
 // Handle form submission

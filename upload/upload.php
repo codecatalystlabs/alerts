@@ -23,7 +23,7 @@ if (isset($_POST['upload'])) {
             $status = $conn->real_escape_string($row[10]);
             
             // Format date to MySQL DATE format (YYYY-MM-DD)
-            $date = date('d-m-Y', strtotime($row[0]));
+            $date = date('Y-m-d', strtotime($row[0]));
 
             $time = $conn->real_escape_string(str_replace(';', ':', $row[1]));
             $call_taker = $conn->real_escape_string($row[2]);
@@ -31,18 +31,18 @@ if (isset($_POST['upload'])) {
             $source_of_alert = $conn->real_escape_string($row[4]);
             $alert_case_name = $conn->real_escape_string($row[15]);
             $alert_case_age = is_numeric($row[17]) ? (int)$row[17] : null;
-            $alert_case_sex = $conn->real_escape_string($row[19]);
-            $point_of_contact_phone = $conn->real_escape_string($row[20]);
-            $point_of_contact_name = $conn->real_escape_string($row[22]);
-            $point_of_contact_relationship = $conn->real_escape_string($row[16]);
+            $alert_case_sex = $conn->real_escape_string($row[18]);
+            $point_of_contact_phone = $conn->real_escape_string($row[19]);
+            $point_of_contact_name = $conn->real_escape_string($row[20]);
+            $point_of_contact_relationship = $conn->real_escape_string($row[20]);
             $symptoms = $conn->real_escape_string($row[16]);
-            $actions = $conn->real_escape_string($row[23]);
+            $actions = $conn->real_escape_string($row[22]);
             $alert_reported_before = $conn->real_escape_string($row[9]);
             $alert_case_village = $conn->real_escape_string($row[11]);
             $alert_case_parish = $conn->real_escape_string($row[12]);
             $alert_case_sub_county = $conn->real_escape_string($row[13]);
             $alert_case_district = $conn->real_escape_string($row[14]);
-            $contact_number = $conn->real_escape_string($row[20]);
+            $contact_number = $conn->real_escape_string($row[6]);
 
             // Insert data into alerts table
             $sql = "INSERT INTO alerts (status, date, time, call_taker, person_reporting, source_of_alert, 
