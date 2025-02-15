@@ -160,7 +160,7 @@ $result = $stmt->get_result();
                     <td><?php echo htmlspecialchars($des['point_of_contact_phone']); ?></td>
                     <td><?php echo htmlspecialchars($des['time']); ?></td>
                     <td>
-                        <a class="btn btn-primary btn-sm" href="alert_verification.php?id=<?php echo $des['id']; ?>">Verify</a>
+                        <button class="btn btn-primary btn-sm verify-btn" data-id="<?php echo $des['id']; ?>">Verify</button>
                     </td>
                 </tr>
             <?php endwhile; ?>
@@ -190,6 +190,29 @@ $result = $stmt->get_result();
         <?php endif; ?>
     </ul>
 </nav>
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script>
+$(document).ready(function(){
+    $('.verify-btn').click(function(){
+        var alertId = $(this).data('id');
+
+        $.ajax({
+            url: 'generateToken.php',
+            type: 'POST',
+            data: { alert_id: alertId },
+            dataType: 'json',
+            success: function(response) {
+                if(response.success) {
+                    // Redirect to verification page with token
+                    window.location.href = 'alert_verification.php?token=' + response.token + '&id=' + alertId;
+                } else {
+                    alert('Error generating token.');
+                }
+            }
+        });
+    });
+});
+</script>
 
 </body>
 </html>

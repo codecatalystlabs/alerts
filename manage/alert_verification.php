@@ -6,33 +6,8 @@ require('../conn.php');
 if (!isset($_GET['id'])) {
     die('No alert id provided');
 }
-$alert_id = $_GET['id'];
-
-// Check if a token already exists for this alert_id
-$stmt = $conn->prepare("SELECT token FROM alert_verification_tokens WHERE alert_id = ? LIMIT 1");
-$stmt->bind_param("i", $alert_id);
-$stmt->execute();
-$stmt->store_result();
-
-if ($stmt->num_rows > 0) {
-    // A token already exists, fetch it
-    $stmt->bind_result($token);
-    $stmt->fetch();
-} else {
-    // No token exists, generate a new one
-    require 'functions.php'; // Assuming generateToken() is defined here
-    $token = generateToken();
-    $expires_at = date('Y-m-d H:i:s', strtotime('+20 hours'));
-
-    // Insert the new token into the database
-    $insert_stmt = $conn->prepare("INSERT INTO alert_verification_tokens (alert_id, token, expires_at) VALUES (?, ?, ?)");
-    $insert_stmt->bind_param("iss", $alert_id, $token, $expires_at);
-    $insert_stmt->execute();
-
-    // Optionally, set a session variable or do additional processing
-    $_SESSION['token'] = $token;
-}
-//$alert_id = $row['alert_id'];
+$alert_id = intval($_GET['id']);
+$token = isset($_GET['token']) ? $_GET['token'] : null;
 
 // Fetch existing alert data
 $stmt = $conn->prepare("SELECT * FROM alerts WHERE id = ?");
@@ -41,8 +16,22 @@ $stmt->execute();
 $alert_data = $stmt->get_result()->fetch_assoc();
 $stmt->close();
 
-
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['report'])) {
+    // Validate token before proceeding
+    if (!$token) {
+        die("Missing token.");
+    }
+
+    $stmt = $conn->prepare("SELECT id FROM alert_verification_tokens WHERE alert_id = ? AND token = ? AND used = 0");
+    $stmt->bind_param("is", $alert_id, $token);
+    $stmt->execute();
+    $stmt->store_result();
+
+    if ($stmt->num_rows === 0) {
+        die("Invalid or already used token!");
+    }
+    $stmt->close();
+
     // Sanitize inputs
     $inputs = [
         'status', 'verification_date', 'verification_time', 'cif_no', 'person_reporting',
@@ -71,16 +60,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['report'])) {
     $data_values[] = $alert_id; // Append $alert_id to the array
     $stmt->bind_param("ssssssssssisisssssssssssssi", ...$data_values);
 
-    
     if ($stmt->execute()) {
-        // Mark the token as used
+        // **Now mark the token as used only after a successful update**
         $stmt = $conn->prepare("UPDATE alert_verification_tokens SET used = 1 WHERE token = ?");
         $stmt->bind_param("s", $token);
         $stmt->execute();
+        $stmt->close();
 
         echo "Alert updated successfully!";
-        
-        
+
         // Notify EMS if action includes "EMS"
         if (strpos($data['actions'], 'EMS') !== false) {
             $stmt = $conn->prepare("SELECT contact_number, person_reporting FROM alerts WHERE id = ?");
@@ -89,7 +77,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['report'])) {
             $details = $stmt->get_result()->fetch_assoc();
             $stmt->close();
 
-            $stmt = $conn->prepare("SELECT email, gname, surname, oname FROM users WHERE affiliation = 'EMS' OR affiliation = 'MoH Call Centre'");
+            $stmt = $conn->prepare("SELECT email, gname, surname, oname FROM users WHERE affiliation IN ('EMS', 'MoH Call Centre', 'REOC')");
             $stmt->execute();
             $users = $stmt->get_result();
             
@@ -97,15 +85,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['report'])) {
                 $to = $person['email'];
                 $subject = "Action needed for alert #$alert_id";
                 $message = "Dear EMS Team, after verification, alert #$alert_id needs your attention. Please contact {$details['person_reporting']} at {$details['contact_number']} for more details.";
-                $headers = "From: no-reply@alerts.health.go.ug";
-                
-                if (mail($to, $subject, $message, $headers)) {
-                    echo "Mail sent to the respective responders.";
+                $headers = "From: philipwaiswa@gmail.com\r\n";
+                $headers .= "Reply-To: no-reply@alerts.health.go.ug\r\n";
+                $headers .= "Content-Type: text/plain; charset=UTF-8\r\n";
+                $notify=mail($to, $subject, $message, $headers);
+                if ($notify) {
+                    echo "Mail sent to {$person['gname']} {$person['surname']}.\n";
                 }
             }
         }
         
-                                                            
         header("Location: alert_verification.php?id=$alert_id");
         exit();
     } else {
@@ -116,6 +105,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['report'])) {
 }
 $conn->close();
 ?>
+
 
 <!DOCTYPE html>
 <html lang="en">
@@ -445,7 +435,7 @@ $conn->close();
     setInterval(refreshSidePane, 15000);
     document.addEventListener("DOMContentLoaded", function () {
         // Restrict date input to today or earlier
-        let dateInput = document.getElementById("date");
+        let dateInput = document.getElementById("verification_date");
         let today = new Date().toISOString().split("T")[0];
         dateInput.setAttribute("max", today);
 

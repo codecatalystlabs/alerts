@@ -13,7 +13,7 @@ include('conn.php');
 <body>
 <div class="left-pane">
 <?php
-$ds = "SELECT * FROM alerts ORDER BY id DESC LIMIT 7;";
+$ds = "SELECT * FROM alerts ORDER BY id DESC LIMIT 3;";
 $dd = mysqli_query($conn, $ds)or die(mysqli_error($conn));
 while ($des = mysqli_fetch_assoc($dd)):
 ?>
