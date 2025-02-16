@@ -65,19 +65,17 @@ if (isset($_POST['report'])) {
    <?php include('includes/nav.php');?>
     <div class="entry-screen-index-open mt-4">
         <h2 class="text-center mb-4">Alert Call Log</h2>
+        <hr>
         <form action="" method="POST">
-            <div class="mb-2">
-                
-            </div>
             <div class="row">
             </div>
             <div class="row">
-                <div class="col-md-2 mb-3">
+                <div class="col-md-1 mb-3">
                     <label for="date" class="form-label">Date</label>
                     <input type="date" class="form-control" id="date" name="date">
                 </div>
-                <div class="col-md-2 mb-3">
-                    <label for="date" class="form-label">Time of Call</label>
+                <div class="col-md-1 mb-3">
+                    <label for="date" class="form-label">Call Time</label>
                     <input type="time" class="form-control" id="time" name="time">
                 </div>
                 <div class="col-md-2 mb-3">
@@ -91,39 +89,62 @@ if (isset($_POST['report'])) {
                     <label for="call_taker" class="form-label">Name of person calling</label>
                     <input type="text" class="form-control" id="person_reporting" name="person_reporting">
                 </div>
-                <div class="col-md-3 mb-3">
+                <div class="col-md-3 mb-3 mt-1">
                     <label for="contact_number" class="form-label">Number of person calling</label>
                     <input type="tel" class="form-control" id="contact_number" name="contact_number">
                 </div>
+                <div class="col-md-3 mb-3">
+            <label for="status" class="form-label">Status</label>
+                <select class="form-select" id="status" name="status"> 
+                    <option value="">---Select Status---</option>
+                    <option value="Alive">Alive</option>
+                    <option value="Dead">Dead</option>
+                </select>
+                </div>
             </div>
-            
+            <hr>
             <div class="row">
                 <h3>Alert Location</h3>
-
-                <div class="col-md-3 mb-3">
-                    <label for="village" class="form-label">Village</label>
-                    <input type="text" class="form-control" id="village" name="village">
-                </div>
-                <div class="col-md-3 mb-3">
-                    <label for="alert_case_parish" class="form-label">Parish</label>
-                    <input type="text" class="form-control" id="alert_case_parish" name="alert_case_parish">
-                </div>
                 <div class="col-md-2 mb-3">
-                    <label for="sub_county" class="form-label">Sub-county/Division</label>
-                    <input type="text" class="form-control" id="sub_county" name="sub_county">
-                </div>
-                
-                <div class="col-md-3 mb-3">
                     <label for="alert_case_district" class="form-label">District</label>
                         <select class="form-select" id="alert_case_districts" name="alert_case_district">
                             <option value="">-- Select District --</option>
                             <?php while ($row = $result2->fetch_assoc()): ?>
-                                <option value="<?= htmlspecialchars($row['district']) ?>">
+                                <option value="<?= htmlspecialchars($row['id']) ?>">
                                     <?= htmlspecialchars($row['district']) ?>
                                 </option>
                             <?php endwhile; ?>
                         </select>                               
                 </div>
+                <div class="col-md-2 mb-3">
+                    <label for="subcounty">Subcounty/Division:</label>
+                    <select id="subcounty" name="subcounty" class="form-control">
+                        <option value="">-- Select Subcounty --</option>
+                    </select>
+                </div>
+                <div class="col-md-2 mb-3">
+                    <label for="village" class="form-label">Village</label>
+                    <input type="text" class="form-control" id="village" name="village">
+                </div>
+                <div class="col-md-2 mb-3">
+                    <label for="alert_case_parish" class="form-label">Parish</label>
+                    <input type="text" class="form-control" id="alert_case_parish" name="alert_case_parish">
+                </div>
+                
+                
+                <div class="col-md-3 mb-3">
+                <label for="source_of_alert" class="form-label">Source of Alert</label>
+                <select class="form-select" id="source_of_alert" name="source_of_alert">
+                    <option value="">---Select source of alert---</option>
+                    <option value="Community">Community</option>
+                    <option value="Health Facility">Health Facility</option>
+                    <option value="Contact Tracing">Contact Tracing</option>
+                    <option value="VHT">VHT</option>
+                    <option value="Active Case Search">Active Case Search</option>
+                    <option value="SMS Alert">SMS Alert</option>
+                </select>
+            </div>
+            <hr>
             </div>
             <div class="row">
                 <h3>Case Alert Description</h3>
@@ -151,63 +172,67 @@ if (isset($_POST['report'])) {
                 <input type="tel" class="form-control" id="point_of_contact_phone" name="point_of_contact_phone">
             </div>
         </div>
+        <hr>
         <div class="row">
+            <div class="mb-3">
                 <h3>Signs and Symptoms</h3>
-                <div class="form-check col-md-3">
+                <div class="form-check form-check-inline">
                     <input class="form-check-input" type="checkbox" value="Fever" id="fever" name="symptoms[]" <?= (isset($alert_data['symptoms']) && strpos($alert_data['symptoms'], 'Fever') !== false) ? 'checked' : ''; ?>>
                     <label class="form-check-label" for="fever">Fever (&ge;38&deg;C)</label>
                 </div>
-                <div class="form-check col-md-3">
+                <div class="form-check form-check-inline">
                     <input class="form-check-input" type="checkbox" value="Headache" id="headache" name="symptoms[]" <?= (isset($alert_data['symptoms']) && strpos($alert_data['symptoms'], 'Headache') !== false) ? 'checked' : ''; ?>>
                     <label class="form-check-label" for="headache">Headache</label>
                 </div>
-                <div class="form-check col-md-3">
+                <div class="form-check form-check-inline">
                     <input class="form-check-input" type="checkbox" value="General Weakness" id="weakness" name="symptoms[]" <?= (isset($alert_data['symptoms']) && strpos($alert_data['symptoms'], 'General Weakness') !== false) ? 'checked' : ''; ?>>
                     <label class="form-check-label" for="weakness">General Weakness</label>
                 </div>
-                <div class="form-check col-md-3">
+                <div class="form-check form-check-inline">
                     <input class="form-check-input" type="checkbox" value="Rash" id="rash" name="symptoms[]" <?= (isset($alert_data['symptoms']) && strpos($alert_data['symptoms'], 'rash') !== false) ? 'checked' : ''; ?>>
                     <label class="form-check-label" for="rash">Skin/Body Rash</label>
                 </div>
-            </div>
-            <div class="row">
-                <div class="form-check col-md-2 mb-3">
+            
+                <div class="form-check form-check-inline">
                     <input class="form-check-input" type="checkbox" value="Sore Throat" id="sore_throat" name="symptoms[]" <?= (isset($alert_data['symptoms']) && strpos($alert_data['symptoms'], 'Sore Throat') !== false) ? 'checked' : ''; ?>>
                     <label class="form-check-label" for="sore_throat">Sore Throat</label>
                 </div>
-                <div class="form-check col-md-3">
+                <div class="form-check form-check-inline">
                     <input class="form-check-input" type="checkbox" value="vomiting" id="vomiting" name="symptoms[]" <?= (isset($alert_data['symptoms']) && strpos($alert_data['symptoms'], 'vomiting') !== false) ? 'checked' : ''; ?>>
                     <label class="form-check-label" for="vomiting">Vomiting</label>
                 </div>
-                <div class="form-check col-md-3">
+                <div class="form-check form-check-inline">
                     <input class="form-check-input" type="checkbox" value="bleeding" id="bleeding" name="symptoms[]" <?= (isset($alert_data['symptoms']) && strpos($alert_data['symptoms'], 'bleeding') !== false) ? 'checked' : ''; ?>>
                     <label class="form-check-label" for="bleeding">Bleeding</label>
                 </div>
-                <div class="form-check col-md-3">
+                <div class="form-check form-check-inline">
                     <input class="form-check-input" type="checkbox" value="Abdominal Pain" id="Abdominal Pain" name="symptoms[]" <?= (isset($alert_data['symptoms']) && strpos($alert_data['symptoms'], 'abdominal_pain') !== false) ? 'checked' : ''; ?>>
                     <label class="form-check-label" for="Abdominal Pain">Abdominal Pain</label>
                 </div>
-                <div class="form-check col-md-3">
+                <div class="form-check form-check-inline">
                     <input class="form-check-input" type="checkbox" value="Aching Muscles/Joints" id="aching_muscle" name="symptoms[]" <?= (isset($alert_data['symptoms']) && strpos($alert_data['symptoms'], 'Aching Muscles/Joints') !== false) ? 'checked' : ''; ?>>
                     <label class="form-check-label" for="aching_muscle">Aching Muscles/ Pain</label>
                 </div>
-                <div class="form-check col-md-3">
+                <div class="form-check form-check-inline">
                     <input class="form-check-input" type="checkbox" value="Difficulty Swallowing" id="difficult_swallowing" name="symptoms[]" <?= (isset($alert_data['symptoms']) && strpos($alert_data['symptoms'], 'Difficulty Swallowing') !== false) ? 'checked' : ''; ?>>
                     <label class="form-check-label" for="Difficulty Swallowing">Difficulty Swallowing</label>
                 </div>
-                <div class="form-check col-md-3">
+                <div class="form-check form-check-inline">
                     <input class="form-check-input" type="checkbox" value="Difficulty Breathing" id="difficulty_breathing" name="symptoms[]" <?= (isset($alert_data['symptoms']) && strpos($alert_data['symptoms'], 'Difficulty Breathing') !== false) ? 'checked' : ''; ?>>
                     <label class="form-check-label" for="Difficulty Breathing">Difficulty Breathing</label>
                 </div>
-                <div class="form-check col-md-3">
+                <div class="form-check form-check-inline">
                     <input class="form-check-input" type="checkbox" value="Lethergy/Weakness" id="lethergy_weakness" name="symptoms[]" <?= (isset($alert_data['symptoms']) && strpos($alert_data['symptoms'], 'Lethergy/Weakness') !== false) ? 'checked' : ''; ?>>
                     <label class="form-check-label" for="Lethergy/Weakness">Lethergy/Weakness</label>
                 </div>
-            <!-- </div> -->
+            </div>
+            <hr>
         </div>
            <button type="submit" class="btn btn-primary" name="report">Submit</button>
         </form>
     </div>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script>
     function refreshSidePane() {
         var xhr = new XMLHttpRequest();
@@ -301,6 +326,53 @@ if (isset($_POST['report'])) {
         setMaxTime();
         setInterval(setMaxTime, 60000);
     });
+
+       $(document).ready(function(){
+    // When a region is selected, load districts
+    $('#region').change(function(){
+        var regionId = $(this).val();
+        console.log('Region selected:', regionId);
+        $.ajax({
+            url: 'manage/getDistrict.php',
+            type: 'POST',
+            data: { region: regionId },
+            dataType: 'json',
+            success: function(response) {
+                console.log('District response:', response);
+                $("#district").empty().append("<option value=''>-- Select District --</option>");
+                $("#subcounty").empty().append("<option value=''>-- Select Subcounty --</option>");
+                $.each(response, function(index, district) {
+                    $("#district").append("<option value='" + district.id + "'>" + district.district + "</option>");
+                });
+            },
+            error: function(jqXHR, textStatus, errorThrown) {
+                console.error('Error loading districts:', textStatus, errorThrown);
+            }
+        });
+    });
+
+    // When a district is selected, load subcounties
+    $('#alert_case_districts').change(function(){
+        var districtId = $(this).val();
+        console.log('District selected:', districtId);
+        $.ajax({
+            url: 'manage/getSubcounties.php',
+            type: 'POST',
+            data: { district: districtId },
+            dataType: 'json',
+            success: function(response) {
+                console.log('Subcounty response:', response);
+                $("#subcounty").empty().append("<option value=''>-- Select Subcounty --</option>");
+                $.each(response, function(index, subcounty) {
+                    $("#subcounty").append("<option value='" + subcounty.id + "'>" + subcounty.subcounty + "</option>");
+                });
+            },
+            error: function(jqXHR, textStatus, errorThrown) {
+                console.error('Error loading subcounties:', textStatus, errorThrown);
+            }
+        });
+    });
+});
 </script>
 
 </body>

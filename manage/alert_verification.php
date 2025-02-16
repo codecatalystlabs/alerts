@@ -85,7 +85,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['report'])) {
                 $to = $person['email'];
                 $subject = "Action needed for alert #$alert_id";
                 $message = "Dear EMS Team, after verification, alert #$alert_id needs your attention. Please contact {$details['person_reporting']} at {$details['contact_number']} for more details.";
-                $headers = "From: philipwaiswa@gmail.com\r\n";
+                $headers = "From: no-reply@alerts.health.go.ug\r\n";
                 $headers .= "Reply-To: no-reply@alerts.health.go.ug\r\n";
                 $headers .= "Content-Type: text/plain; charset=UTF-8\r\n";
                 $notify=mail($to, $subject, $message, $headers);
@@ -132,6 +132,7 @@ $conn->close();
     </div>
     <div class="entry-screen mt-1">
         <h2 class="text-center mb-2">Alert Verification Form</h2>
+        <hr>
         <form action="" method="POST" action="">
             <input type="hidden" name="alert_id" value="<?php echo $alert['id']; ?>">
             <div class="mb-2">
